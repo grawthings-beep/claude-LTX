@@ -1,11 +1,20 @@
-# workflows
+# Workflows
 
-このディレクトリのJSONは起動時に ComfyUI の Workflows リストへコピーされる。
+Recommended first:
 
-公式のLTX 2.3ワークフロー（`ltx23_official_two_stage_hq.json` /
-`ltx23_official_single_stage.json`）はここには置いていない。イメージに
-ピン留めされた ComfyUI-LTXVideo の `example_workflows/2.3/` から起動時に
-コピーし、モデル名（fp8チェックポイント、fp4-mixed Gemma、`loras/ltx23`）を
-パッチして設置する（`scripts/start.sh` の `install_official_workflows`）。
+- `00_recommended_i2v_identity_lock_10eros.json`
+- `01_recommended_i2v_simple_10eros.json`
 
-独自ワークフローを追加したい場合はこのディレクトリにJSONを置けばよい。
+Both use the 10Eros checkpoint, Reasoning I2V, and a light Edit Anything IC LoRA
+pass. They do not need `CIVITAI_TOKEN`.
+
+Other useful workflows:
+
+- `video_ltx23_i2v_first_last_pair_dasiwa_fast.json`: separate first/last images
+- `video_ltx23_i2v_first_last_same_dasiwa_fast.json`: loop/identity lock
+- `video_ltx23_i2v_simple_dasiwa_fast.json`: faster single-image I2V
+- `video_ltx23_i2v_*_2stage_hq.json`: higher quality, Civitai LoRA dependent
+
+If a workflow complains about a missing `civitai/...` LoRA, either set
+`CIVITAI_TOKEN` and let the downloader fetch optional Civitai models, or switch
+to one of the `00_`, `01_`, or `*_dasiwa_*` workflows.

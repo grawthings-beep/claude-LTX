@@ -19,7 +19,7 @@ jobs:
       - name: Validate scripts and manifest
         run: |
           bash -n scripts/start.sh scripts/common.sh scripts/install_custom_nodes.sh
-          python3 -m py_compile scripts/download_models.py scripts/check_env.py scripts/long_video.py
+          python3 -m py_compile scripts/download_models.py scripts/check_env.py scripts/long_video.py scripts/generate_two_stage_workflows.py
           python3 -m unittest discover -s tests -v
 
       - name: Set up Docker Buildx

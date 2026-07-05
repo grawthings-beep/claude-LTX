@@ -51,49 +51,15 @@ mkdir -p "${WORKSPACE_DIR}/input" \
 
 install_bundled_workflows() {
   local workflow
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/ltx23_official_*.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/video_ltx23_i2v_mosaic.json
   for workflow in /opt/claude-ltx/workflows/*.json; do
     [[ -e "${workflow}" ]] || continue
     install -m 0644 "${workflow}" "${COMFYUI_WORKFLOW_DIR}/$(basename "${workflow}")"
   done
 }
 
-# Copy the official LTX 2.3 example workflows from the pinned
-# ComfyUI-LTXVideo checkout and point them at the model filenames this
-# image actually downloads (fp8 checkpoint, fp4-mixed Gemma, loras/ltx23).
-install_official_workflows() {
-  "${PYTHON_BIN}" - "${COMFYUI_DIR}" "${COMFYUI_WORKFLOW_DIR}" <<'PY'
-import pathlib
-import sys
-
-comfyui_dir = pathlib.Path(sys.argv[1])
-target_dir = pathlib.Path(sys.argv[2])
-source_dir = comfyui_dir / "custom_nodes/ComfyUI-LTXVideo/example_workflows/2.3"
-
-replacements = {
-    "ltx-2.3-22b-dev.safetensors": "ltx-2.3-22b-dev-fp8.safetensors",
-    "ltxv/ltx2/ltx-2.3-22b-distilled-lora-384-1.1.safetensors":
-        "ltx23/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
-    "comfy_gemma_3_12B_it.safetensors": "gemma_3_12B_it_fp4_mixed.safetensors",
-}
-names = {
-    "LTX-2.3_T2V_I2V_Two_Stage_Distilled.json": "ltx23_official_two_stage_hq.json",
-    "LTX-2.3_T2V_I2V_Single_Stage_Distilled_Full.json": "ltx23_official_single_stage.json",
-}
-for source_name, target_name in names.items():
-    source = source_dir / source_name
-    if not source.exists():
-        print(f"WARN: missing official workflow {source}", file=sys.stderr)
-        continue
-    text = source.read_text(encoding="utf-8")
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-    (target_dir / target_name).write_text(text, encoding="utf-8")
-    print(f"Installed workflow {target_name}")
-PY
-}
-
 install_bundled_workflows
-install_official_workflows
 
 write_extra_model_paths() {
   local target="$1"

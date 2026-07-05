@@ -1,10 +1,11 @@
 {
   "models": [
     {
-      "name": "LTX 2.3 22B dev fp8 checkpoint (official)",
+      "name": "10Eros fp8mixed learned checkpoint",
       "enabled": true,
-      "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors?download=true",
-      "path": "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors",
+      "url": "https://huggingface.co/TenStrip/LTX2.3-10Eros/resolve/main/10Eros_v1-fp8mixed_learned.safetensors?download=true",
+      "path": "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
+      "sha256": "5c00038d4f1527e9842a832eb35192990de410ed2dd722c70aaf0f23cb3c9fd6",
       "headers": {
         "Authorization": "Bearer ${HF_TOKEN}"
       }
@@ -19,7 +20,16 @@
       }
     },
     {
-      "name": "LTX 2.3 spatial upscaler x2 1.1 (official)",
+      "name": "LTX 2.3 text projection bf16",
+      "enabled": true,
+      "url": "https://huggingface.co/Kijai/LTX2.3_comfy/resolve/main/text_encoders/ltx-2.3_text_projection_bf16.safetensors?download=true",
+      "path": "models/text_encoders/ltx-2.3_text_projection_bf16.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTX 2.3 spatial upscaler x2 1.1",
       "enabled": true,
       "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true",
       "path": "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
@@ -28,20 +38,129 @@
       }
     },
     {
-      "name": "LTX 2.3 distilled LoRA 384 1.1 (official)",
+      "name": "TenStrip distilled LoRA condsafe",
       "enabled": true,
-      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors?download=true",
-      "path": "models/loras/ltx23/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "url": "https://huggingface.co/TenStrip/LTX2.3_Distilled_Lora_1.1_Experiments/resolve/main/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors?download=true",
+      "path": "models/loras/ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
       "headers": {
         "Authorization": "Bearer ${HF_TOKEN}"
       }
     },
     {
-      "name": "LTX 2.3 temporal upscaler x2 1.0 (official, optional)",
-      "enabled": false,
+      "name": "Edit anything IC LoRA",
+      "enabled": true,
+      "url": "https://huggingface.co/Alissonerdx/LTX-LoRAs/resolve/main/ltx23_edit_anything_global_rank128_v1_9000steps_adamw.safetensors?download=true",
+      "path": "models/loras/ltx23/ltx23_edit_anything_global_rank128_v1_9000steps_adamw.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "Civitai LTX 2.3 Phut hon LoRA",
+      "enabled": true,
       "required": false,
-      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-temporal-upscaler-x2-1.0.safetensors?download=true",
-      "path": "models/latent_upscale_models/ltx-2.3-temporal-upscaler-x2-1.0.safetensors",
+      "requires_env": [
+        "CIVITAI_TOKEN"
+      ],
+      "method": "curl",
+      "use_aria2": false,
+      "min_bytes": 1048576,
+      "url": "https://civitai.com/api/download/models/2806861?type=Model&format=SafeTensor&token=${CIVITAI_TOKEN}",
+      "path": "models/loras/civitai/ltx23_phut_hon_civitai_2806861.safetensors"
+    },
+    {
+      "name": "Civitai SmoothMix Animations LTX LoRA",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "CIVITAI_TOKEN"
+      ],
+      "method": "curl",
+      "use_aria2": false,
+      "min_bytes": 1048576,
+      "url": "https://civitai.com/api/download/models/2911845?type=Model&format=SafeTensor&token=${CIVITAI_TOKEN}",
+      "path": "models/loras/civitai/smoothmix_animations_ltx_civitai_2911845.safetensors"
+    },
+    {
+      "name": "Civitai LTX LoRA 2849892",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "CIVITAI_TOKEN"
+      ],
+      "method": "curl",
+      "use_aria2": false,
+      "min_bytes": 1048576,
+      "url": "https://civitai.com/api/download/models/2849892?type=Model&format=SafeTensor&token=${CIVITAI_TOKEN}",
+      "path": "models/loras/civitai/civitai_2849892.safetensors"
+    },
+    {
+      "name": "Reasoning I2V V3 LoRA (uwgm)",
+      "enabled": true,
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/LTX2.3_reasoning_I2V_V3.safetensors?download=true",
+      "path": "models/loras/ltx23/LTX2.3_reasoning_I2V_V3.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "Latexturn 10Eros I2V v0.5 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/latexturn_10Eros_i2v_v0.5.safetensors?download=true",
+      "path": "models/loras/ltx23/latexturn_10Eros_i2v_v0.5.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTXV23 Footjob V1 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/LTXV23_FOOTJOB_V1.safetensors?download=true",
+      "path": "models/loras/ltx23/LTXV23_FOOTJOB_V1.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "TentacleMotion 10Eros I2V v1.0 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/TentacleMotion_10Eros_i2v_v1.0.safetensors?download=true",
+      "path": "models/loras/ltx23/TentacleMotion_10Eros_i2v_v1.0.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "Stomach bulge 10Eros sulphur v1 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/stomach_bulge_10eros_sulphur_v1.safetensors?download=true",
+      "path": "models/loras/ltx23/stomach_bulge_10eros_sulphur_v1.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "NSFW riding backshot/frontshot LTX2.3 v1.0 (uwgm)",
+      "enabled": true,
+      "required": false,
+      "url": "https://huggingface.co/uwgm/nikke-loras/resolve/main/nsfw_riding_backshot_frontshot_ltx23_v1.0.safetensors?download=true",
+      "path": "models/loras/ltx23/nsfw_riding_backshot_frontshot_ltx23_v1.0.safetensors",
       "headers": {
         "Authorization": "Bearer ${HF_TOKEN}"
       }

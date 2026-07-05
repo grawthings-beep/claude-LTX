@@ -1,42 +1,38 @@
-# RunPod セットアップ手順
+# RunPod setup
 
-## 1. GitHub Actions のビルドを待つ
+## 1. Wait for the GHCR build
 
-main へ push すると `Build GHCR image` が走る。
+After pushing to `main`, wait until this Actions workflow is green:
 
-```
+```text
 https://github.com/grawthings-beep/claude-LTX/actions
 ```
 
-緑になったら `ghcr.io/grawthings-beep/claude-ltx:cuda12.8` が使える。
-初回はGHCRパッケージがprivateになるので、リポジトリの Packages 設定で
-public にするか、RunPod側にレジストリ認証を設定すること。
+Use this image:
 
-## 2. RunPod テンプレート
-
-Container image:
-
-```
+```text
 ghcr.io/grawthings-beep/claude-ltx:cuda12.8
 ```
 
-HTTP port:
+If RunPod cannot pull it, make the GHCR package public or add GHCR registry
+credentials in RunPod.
 
-```
-ComfyUI 8188
+## 2. Template settings
+
+```text
+Container Image: ghcr.io/grawthings-beep/claude-ltx:cuda12.8
+HTTP Port: 8188
+Container Disk: 40 GB+
+Volume / Network Volume: 150 GB+
+Volume Mount Path: /workspace
 ```
 
-ディスク:
+Leave the command/start command empty. The image starts
+`/opt/claude-ltx/scripts/start.sh`.
 
-```
-Container disk: 40 GB+
-Volume / Network Volume: 150 GB+（モデル一式が数十GBあるため）
-Volume mount path: /workspace
-```
+## 3. Environment variables
 
-環境変数:
-
-```
+```env
 PORT=8188
 LISTEN=0.0.0.0
 RUN_DEP_CHECK=0
@@ -53,46 +49,62 @@ VERIFY_MODEL_HASHES=once
 COMFYUI_ARGS=--reserve-vram 5
 ```
 
-対象モデルはすべて公開リポジトリなので `HF_TOKEN` が無くても落ちるはずだが、
-レート制限回避のため設定を推奨。トークンは RunPod Secrets を使うこと。
+Optional, only if you want the Civitai workflows:
 
-## 3. 初回起動
+```env
+CIVITAI_TOKEN={{ RUNPOD_SECRET_CIVITAI_TOKEN }}
+```
 
-ComfyUIはダウンロード完了前に開く。進捗確認:
+The recommended workflows do not require Civitai. They do require Hugging Face
+access because some LoRAs are in the private `uwgm/nikke-loras` repo.
+
+## 4. First boot
+
+ComfyUI opens while models download in the background. Watch:
 
 ```bash
 cat /workspace/comfyui/logs/model-download.status
 tail -f /workspace/comfyui/logs/model-download.log
 ```
 
-`complete` になったらComfyUIをリロード。2回目以降の起動は
-`/workspace/comfyui/models` を再利用してスキップされる。
-全モデル完了までポートを開けたくない場合は `MODEL_DOWNLOAD_MODE=blocking`。
+When the status is `complete`, refresh ComfyUI.
 
-## 4. 生成
+Use blocking mode if you want the port to open only after downloads complete:
 
-Workflows リストから選択:
-
-```
-ltx23_official_single_stage.json   反復・seed探し用（速い）
-ltx23_official_two_stage_hq.json   本番用（二段HQ、遅いが高画質）
+```env
+MODEL_DOWNLOAD_MODE=blocking
 ```
 
-`LoadImage` に自分の画像を入れ、プロンプトを書いて生成。
+## 5. Workflow choice
 
-## 5. 長尺動画
+Start with:
 
-README の「長尺動画（20秒超）」を参照。two_stage_hq を API形式で
-エクスポートしてから:
-
-```bash
-python3 /opt/claude-ltx/scripts/long_video.py \
-  --workflow /workspace/comfyui/exports/two_stage_api.json \
-  --image /workspace/comfyui/input/start.png \
-  --segments 3 --frames 241 --seed 42 \
-  --prompt "..." \
-  --output /workspace/comfyui/output/long.mp4
+```text
+00_recommended_i2v_identity_lock_10eros.json
 ```
 
-まず `--segments 2` で境界の品質（動きの連続性・色）を確認してから
-本数を増やすこと。
+Replace the `LoadImage` image with your own source image. This workflow uses the
+same source image as first and last guide, which is better when the character is
+turning into a different person.
+
+If it is too constrained, try:
+
+```text
+01_recommended_i2v_simple_10eros.json
+```
+
+For two separate keyframes, use:
+
+```text
+video_ltx23_i2v_first_last_pair_dasiwa_fast.json
+```
+
+Replace both the normal `LoadImage` input and the `Last Frame Image` input.
+
+## 6. Practical defaults
+
+- Use 48 GB VRAM or higher for the HQ/two-stage workflows.
+- Keep `COMFYUI_ARGS=--reserve-vram 5` unless you know the GPU has room.
+- If identity drifts, reduce prompt pressure and use the identity-lock workflow.
+- If motion is weak, use the simple workflow and lower image-guide strength.
+- Keep first-frame and last-frame images visually close for loop workflows.
