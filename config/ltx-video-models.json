@@ -1,0 +1,50 @@
+{
+  "models": [
+    {
+      "name": "LTX 2.3 22B dev fp8 checkpoint (official)",
+      "enabled": true,
+      "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors?download=true",
+      "path": "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "Gemma 3 12B text encoder fp4 mixed",
+      "enabled": true,
+      "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true",
+      "path": "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTX 2.3 spatial upscaler x2 1.1 (official)",
+      "enabled": true,
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true",
+      "path": "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTX 2.3 distilled LoRA 384 1.1 (official)",
+      "enabled": true,
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors?download=true",
+      "path": "models/loras/ltx23/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTX 2.3 temporal upscaler x2 1.0 (official, optional)",
+      "enabled": false,
+      "required": false,
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-temporal-upscaler-x2-1.0.safetensors?download=true",
+      "path": "models/latent_upscale_models/ltx-2.3-temporal-upscaler-x2-1.0.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    }
+  ]
+}
