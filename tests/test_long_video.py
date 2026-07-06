@@ -39,6 +39,11 @@ def sample_workflow():
             "inputs": {"noise_seed": 43},
             "_meta": {"title": "RandomNoise refine"},
         },
+        "8": {
+            "class_type": "PrimitiveBoolean",
+            "inputs": {"value": True},
+            "_meta": {"title": "bypass_i2v"},
+        },
     }
 
 
@@ -57,6 +62,12 @@ class PatchWorkflowTests(unittest.TestCase):
         self.assertEqual(patched["4"]["inputs"]["value"], 241)
         self.assertEqual(patched["5"]["inputs"]["noise_seed"], 1000)
         self.assertEqual(patched["6"]["inputs"]["noise_seed"], 1001)
+        self.assertFalse(patched["8"]["inputs"]["value"],
+                         "bypass_i2v must be forced off when an image is given")
+
+    def test_bypass_i2v_untouched_without_image(self):
+        patched = long_video.patch_workflow(sample_workflow(), prompt="x")
+        self.assertTrue(patched["8"]["inputs"]["value"])
 
     def test_original_not_mutated(self):
         workflow = sample_workflow()

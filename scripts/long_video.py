@@ -82,6 +82,12 @@ def patch_workflow(workflow, *, image=None, prompt=None, frames=None, seed=None,
             log(f"WARN: {len(load_nodes)} LoadImage nodes found, patching all of them")
         for nid in load_nodes:
             wf[nid]["inputs"]["image"] = image
+        # The official LTX 2.3 T2V/I2V workflow has a "bypass_i2v" toggle
+        # that, when True, silently ignores the loaded image (T2V mode).
+        # An input image only makes sense in I2V mode, so force it off.
+        for nid in nodes_by_title(wf, "bypass_i2v"):
+            if "value" in wf[nid]["inputs"]:
+                wf[nid]["inputs"]["value"] = False
 
     if prompt is not None:
         targets = nodes_by_title(wf, prompt_title)
