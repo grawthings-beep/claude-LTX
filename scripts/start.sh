@@ -52,7 +52,11 @@ mkdir -p "${WORKSPACE_DIR}/input" \
 install_bundled_workflows() {
   local workflow
   rm -f "${COMFYUI_WORKFLOW_DIR}"/ltx23_official_*.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/video_ltx23_i2v_mosaic.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/00_recommended_i2v_identity_lock_10eros.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_experimental_i2v_cyclic_phasecut_10eros.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/03_experimental_i2v_cyclic_phasecut_1152x896_10eros.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_i2v_1152x896_cyclic_phasecut_10eros.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/video_ltx23_i2v_*.json
   for workflow in /opt/claude-ltx/workflows/*.json; do
     [[ -e "${workflow}" ]] || continue
     install -m 0644 "${workflow}" "${COMFYUI_WORKFLOW_DIR}/$(basename "${workflow}")"

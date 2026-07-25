@@ -3,6 +3,7 @@
 rgthree-comfy|https://github.com/rgthree/rgthree-comfy.git|738105af5fb14e96fbecaf406dc356e284797e8c
 ComfyMath|https://github.com/evanspearman/ComfyMath.git|c01177221c31b8e5fbc062778fc8254aeb541638
 ComfyUI-VideoHelperSuite|https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git|4ee72c065db22c9d96c2427954dc69e7b908444b
+ComfyUI-Frame-Interpolation|https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git|26545cc2dd95bc3d27f056016300673bdeee78f5
 ComfyUI-LTXVideo|https://github.com/Lightricks/ComfyUI-LTXVideo.git|229437c6b65796d6a7a63ae34be2bd5ba31fa543
 RES4LYF|https://github.com/ClownsharkBatwing/RES4LYF.git|419de2d7c78f415dde9aa352a7231820ebfc17a4
 ComfyUI-Custom-Scripts|https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git|609f3afaa74b2f88ef9ce8d939626065e3247469

@@ -1,20 +1,16 @@
 # Workflows
 
-Recommended first:
+Bundled workflows:
 
-- `00_recommended_i2v_identity_lock_10eros.json`
 - `01_recommended_i2v_simple_10eros.json`
+- `02_reference_ltx23_i2v_1152x896_phut_hon.json`
 
-Both use the 10Eros checkpoint, Reasoning I2V, and a light Edit Anything IC LoRA
-pass. They do not need `CIVITAI_TOKEN`.
+`01_recommended_i2v_simple_10eros.json` is the simple 10Eros I2V workflow.
 
-Other useful workflows:
-
-- `video_ltx23_i2v_first_last_pair_dasiwa_fast.json`: separate first/last images
-- `video_ltx23_i2v_first_last_same_dasiwa_fast.json`: loop/identity lock
-- `video_ltx23_i2v_simple_dasiwa_fast.json`: faster single-image I2V
-- `video_ltx23_i2v_*_2stage_hq.json`: higher quality, Civitai LoRA dependent
-
-If a workflow complains about a missing `civitai/...` LoRA, either set
-`CIVITAI_TOKEN` and let the downloader fetch optional Civitai models, or switch
-to one of the `00_`, `01_`, or `*_dasiwa_*` workflows.
+`02_reference_ltx23_i2v_1152x896_phut_hon.json` is the imported reference
+workflow from `a914e520-9bc7-49bb-835f-b6717cd19ba3.json`. It preserves the
+`1152x896` LTX 2.3 I2V setup, the Phut hon and Image2Vid Adapter LoRAs, and the
+RIFE/VHS side branch from the source workflow. The RIFE node comes from the
+`ComfyUI-Frame-Interpolation` custom node pack pinned in `custom_nodes.txt`.
+The image build also preinstalls `rife49.pth`; the AnimeSharpV4 x2 RCAN upscaler
+is listed in the model manifest.

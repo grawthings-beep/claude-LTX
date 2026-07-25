@@ -1,18 +1,21 @@
 # claude-LTX
 
-RunPod ComfyUI template for LTX 2.3 I2V, rebuilt around the 10Eros checkpoint
-and stronger image-reference workflows.
+RunPod ComfyUI template for LTX I2V workflows.
 
-This repo intentionally does not default to the plain official LTX 2.3 example
-workflows. The recommended workflows use:
+The bundled workflow set is intentionally small:
 
-- `10Eros_v1-fp8mixed_learned.safetensors` from `TenStrip/LTX2.3-10Eros`
-- TenStrip distilled LoRA `condsafe`
-- `LTX2.3_reasoning_I2V_V3.safetensors`
-- `ltx23_edit_anything_global_rank128_v1_9000steps_adamw.safetensors` in the
-  `00_` and `01_` recommended workflows
-- source-image guide reapplication in the second pass
-- DaSiWa-style fast scheduler settings for clearer I2V output
+- `01_recommended_i2v_simple_10eros.json`
+- `02_reference_ltx23_i2v_1152x896_phut_hon.json`
+
+`01_recommended_i2v_simple_10eros.json` is the 10Eros-based simple I2V path.
+Use it as the stable fallback.
+
+`02_reference_ltx23_i2v_1152x896_phut_hon.json` is imported from the reference
+MP4 workflow. It uses the official LTX 2.3 fp8 checkpoint, Phut hon LoRA, and
+Image2Vid Adapter LoRA, with `1152x896` output settings. The imported workflow
+also keeps its RIFE frame interpolation branch, so the image includes the
+`ComfyUI-Frame-Interpolation` node pack, `rife49.pth`, and the AnimeSharpV4 x2
+RCAN upscaler used by that branch.
 
 ## RunPod Image
 
@@ -23,29 +26,14 @@ ghcr.io/grawthings-beep/claude-ltx:cuda12.8
 Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
-## Recommended Workflows
-
-Use these first:
-
-```text
-00_recommended_i2v_identity_lock_10eros.json
-01_recommended_i2v_simple_10eros.json
-```
-
-`00_recommended_i2v_identity_lock_10eros.json` uses the same input image as both
-the first-frame and last-frame guide. It is the best default when the source
-character keeps drifting into a different person.
-
-`01_recommended_i2v_simple_10eros.json` is the lighter single-image I2V path.
-Use it when motion is more important than loop/identity locking.
-
-The older Civitai-assisted workflows are still included, but they need
-`CIVITAI_TOKEN` and are not the first recommendation.
-
 ## Model Storage
 
 Models are downloaded into `/workspace/comfyui/models`, so a RunPod persistent
 volume or Network Volume will reuse them across Pod restarts.
+
+HF-hosted LoRAs used by the bundled workflows are downloaded automatically when
+`HF_TOKEN` is set. Existing Civitai LoRAs are still kept as optional entries and
+are skipped unless `CIVITAI_TOKEN` is provided.
 
 Useful logs:
 

@@ -41,4 +41,41 @@ while IFS='|' read -r name url ref; do
     echo "Installing package ${name}"
     "${PYTHON_BIN}" -m pip install -e "${target}" || true
   fi
+
+  if [[ "${name}" == "ComfyUI-Frame-Interpolation" && -f "${target}/install.py" ]]; then
+    echo "Installing Frame Interpolation dependencies"
+    (cd "${target}" && "${PYTHON_BIN}" install.py)
+  fi
 done < /opt/claude-ltx/custom_nodes.txt
+
+install_frame_interpolation_assets() {
+  local target="${CUSTOM_NODES_DIR}/ComfyUI-Frame-Interpolation"
+  local rife_dir="${target}/ckpts/rife"
+  local rife_model="${rife_dir}/rife49.pth"
+  [[ -d "${target}" ]] || return 0
+  [[ -s "${rife_model}" ]] && return 0
+
+  echo "Installing RIFE checkpoint rife49.pth"
+  mkdir -p "${rife_dir}"
+  "${PYTHON_BIN}" - "${rife_model}" <<'PY'
+import pathlib
+import sys
+import urllib.request
+
+url = "https://github.com/Fannovel16/ComfyUI-Frame-Interpolation/releases/download/models/rife49.pth"
+target = pathlib.Path(sys.argv[1])
+temporary = target.with_name(target.name + ".part")
+request = urllib.request.Request(url, headers={"User-Agent": "claude-ltx-template"})
+with urllib.request.urlopen(request, timeout=180) as response, temporary.open("wb") as output:
+    while True:
+        chunk = response.read(1024 * 1024 * 8)
+        if not chunk:
+            break
+        output.write(chunk)
+if temporary.stat().st_size < 1024 * 1024:
+    raise SystemExit(f"downloaded RIFE checkpoint is too small: {temporary.stat().st_size} bytes")
+temporary.replace(target)
+PY
+}
+
+install_frame_interpolation_assets
