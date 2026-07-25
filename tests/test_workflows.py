@@ -303,6 +303,7 @@ class WorkflowTests(unittest.TestCase):
         )
         self.assertIn("check_workflow_nodes.py", dockerfile)
         self.assertIn("wait_for_gpu", start)
+        self.assertIn("GPU_WAIT_TIMEOUT:-600", start)
         self.assertIn('ctypes.CDLL("libcuda.so.1")', start)
         self.assertIn("nvidia-smi --query-gpu=name", start)
         self.assertLess(start.index("start_background_downloads"), start.rindex("wait_for_gpu"))

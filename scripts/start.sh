@@ -19,7 +19,7 @@ wait_for_gpu() {
     return 0
   fi
 
-  local timeout="${GPU_WAIT_TIMEOUT:-120}"
+  local timeout="${GPU_WAIT_TIMEOUT:-600}"
   local interval="${GPU_WAIT_INTERVAL:-3}"
   local started="${SECONDS}"
   local elapsed=0
