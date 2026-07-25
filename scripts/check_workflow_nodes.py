@@ -36,9 +36,16 @@ def main():
 
     comfy.options.enable_args_parsing()
     import utils.install_util
+    import server
     import nodes
 
-    asyncio.run(nodes.init_extra_nodes(init_api_nodes=False))
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    server.PromptServer(loop)
+    try:
+        loop.run_until_complete(nodes.init_extra_nodes(init_api_nodes=False))
+    finally:
+        loop.close()
 
     required = set()
     for path in workflow_dir.glob("*.json"):
