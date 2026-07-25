@@ -901,7 +901,7 @@
     },
     {
       "id": 325,
-      "type": "SetImageSize",
+      "type": "LTXSetImageSize",
       "pos": [
         -1623.33465926516,
         4149.989174438454
@@ -933,9 +933,9 @@
         }
       ],
       "properties": {
-        "cnr_id": "RES4LYF",
-        "ver": "0dc91c00c4c3fb38e7874fcd7a2a327765e8882c",
-        "Node name for S&R": "SetImageSize",
+        "cnr_id": "claude-ltx",
+        "ver": "1.0.0",
+        "Node name for S&R": "LTXSetImageSize",
         "ue_properties": {
           "widget_ue_connectable": {},
           "input_ue_unconnectable": {},

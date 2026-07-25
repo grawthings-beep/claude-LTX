@@ -11,6 +11,31 @@ AUDIO_CHANNELS = 8
 AUDIO_FREQUENCY_BINS = 16
 
 
+class LTXSetImageSize:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": (
+                    "INT",
+                    {"default": 1728, "min": 64, "max": 8192, "step": 32},
+                ),
+                "height": (
+                    "INT",
+                    {"default": 1152, "min": 64, "max": 8192, "step": 32},
+                ),
+            }
+        }
+
+    RETURN_TYPES = ("INT", "INT")
+    RETURN_NAMES = ("width", "height")
+    FUNCTION = "size"
+    CATEGORY = "LTX/support"
+
+    def size(self, width, height):
+        return (width, height)
+
+
 def latent_video_shape(width, height, length):
     if width % 32 or height % 32:
         raise ValueError("LTX loop width and height must be divisible by 32")
@@ -400,12 +425,14 @@ class LTXLoopAudioSeam:
 
 
 NODE_CLASS_MAPPINGS = {
+    "LTXSetImageSize": LTXSetImageSize,
     "LTXMobiusSampler": LTXMobiusSampler,
     "LTXLoopDecodeTiled": LTXLoopDecodeTiled,
     "LTXLoopAudioSeam": LTXLoopAudioSeam,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "LTXSetImageSize": "Set Image Size",
     "LTXMobiusSampler": "LTX Mobius Sampler",
     "LTXLoopDecodeTiled": "LTX Loop Decode",
     "LTXLoopAudioSeam": "LTX Loop Audio Seam",

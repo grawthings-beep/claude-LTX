@@ -78,6 +78,7 @@ class WorkflowTests(unittest.TestCase):
             ["ltx-2.3-spatial-upscaler-x2-1.1.safetensors"],
         )
         self.assertEqual(nodes[325]["widgets_values"], [1728, 1152])
+        self.assertEqual(nodes[325]["type"], "LTXSetImageSize")
         self.assertEqual(nodes[298]["widgets_values"][0], 24)
         self.assertEqual(nodes[299]["widgets_values"][0], 162)
         self.assertEqual(nodes[75]["widgets_values"][0], "video/i2v")
@@ -124,6 +125,7 @@ class WorkflowTests(unittest.TestCase):
             ["ltx-2.3-22b-distilled-lora-384.safetensors", 0.5],
         )
         self.assertEqual(nodes[325]["widgets_values"], [1728, 1152])
+        self.assertEqual(nodes[325]["type"], "LTXSetImageSize")
         self.assertEqual(nodes[299]["widgets_values"][0], 161)
         self.assertEqual(nodes[75]["widgets_values"][0], "video/loop")
 
@@ -187,13 +189,16 @@ class WorkflowTests(unittest.TestCase):
 
     def test_custom_nodes_are_pinned(self):
         lines = (ROOT / "custom_nodes.txt").read_text(encoding="utf-8").splitlines()
+        names = set()
         for line in lines:
             if not line or line.startswith("#"):
                 continue
             name, url, revision = line.split("|")
+            names.add(name)
             self.assertTrue(name)
             self.assertTrue(url.startswith("https://github.com/"))
             self.assertRegex(revision, r"^[0-9a-f]{40}$")
+        self.assertEqual(names, {"rgthree-comfy"})
 
     def test_bundled_loop_nodes_are_installed(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
@@ -206,9 +211,24 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertIn("COPY custom_nodepacks/", dockerfile)
         self.assertIn("install_bundled_nodepacks", installer)
+        self.assertIn('"LTXSetImageSize": LTXSetImageSize', node_source)
         self.assertIn('"LTXMobiusSampler": LTXMobiusSampler', node_source)
         self.assertIn('"LTXLoopDecodeTiled": LTXLoopDecodeTiled', node_source)
         self.assertIn('"LTXLoopAudioSeam": LTXLoopAudioSeam', node_source)
+
+    def test_image_is_slimmed_and_waits_for_cuda(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
+
+        self.assertIn("runpod/comfyui:1.4.2-cuda12.8@sha256:", dockerfile)
+        self.assertIn(
+            "rm -rf /opt/comfyui-baked/custom_nodes/ComfyUI-Manager",
+            dockerfile,
+        )
+        self.assertIn("check_workflow_nodes.py", dockerfile)
+        self.assertIn("wait_for_gpu", start)
+        self.assertIn("torch.cuda.init()", start)
+        self.assertLess(start.index("start_background_downloads"), start.rindex("wait_for_gpu"))
 
     def test_start_script_removes_retired_workflows(self):
         start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")

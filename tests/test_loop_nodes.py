@@ -57,10 +57,17 @@ class LoopNodeTests(unittest.TestCase):
         self.assertEqual(
             set(self.nodes.NODE_CLASS_MAPPINGS),
             {
+                "LTXSetImageSize",
                 "LTXMobiusSampler",
                 "LTXLoopDecodeTiled",
                 "LTXLoopAudioSeam",
             },
+        )
+
+    def test_image_size_node_preserves_dimensions(self):
+        self.assertEqual(
+            self.nodes.LTXSetImageSize().size(1728, 1152),
+            (1728, 1152),
         )
 
 

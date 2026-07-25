@@ -24,6 +24,12 @@ ghcr.io/grawthings-beep/claude-ltx:cuda12.8
 Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
+The image uses a pinned, smaller CUDA 12.8 RunPod base and bundles only the
+external node pack used by the workflows. ComfyUI waits for both `nvidia-smi`
+and PyTorch CUDA initialization before starting, avoiding crash loops while a
+RunPod GPU is still being attached. Set `WAIT_FOR_GPU=0` only for intentional
+CPU-only diagnostics.
+
 ## Model Storage
 
 Models are downloaded into `/workspace/comfyui/models`, so a RunPod persistent

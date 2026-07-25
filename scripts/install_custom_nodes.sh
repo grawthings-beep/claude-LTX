@@ -20,16 +20,21 @@ while IFS='|' read -r name url ref; do
   [[ -z "${name}" || "${name}" =~ ^# ]] && continue
   target="${CUSTOM_NODES_DIR}/${name}"
 
-  if [[ ! -d "${target}/.git" ]]; then
-    echo "Installing custom node ${name}"
-    git clone --depth 1 "${url}" "${target}"
+  if [[ -d "${target}/.git" ]]; then
+    echo "Updating custom node ${name}"
   else
-    echo "Custom node ${name} already exists"
+    echo "Installing custom node ${name}"
+    rm -rf "${target}"
+    git init -q "${target}"
+    git -C "${target}" remote add origin "${url}"
   fi
 
   if [[ -n "${ref:-}" ]]; then
     git -C "${target}" fetch --depth 1 origin "${ref}"
-    git -C "${target}" checkout FETCH_HEAD
+    git -C "${target}" checkout -q --detach FETCH_HEAD
+  else
+    git -C "${target}" fetch --depth 1 origin HEAD
+    git -C "${target}" checkout -q --detach FETCH_HEAD
   fi
 
   if [[ -f "${target}/requirements.txt" ]]; then
@@ -42,6 +47,8 @@ while IFS='|' read -r name url ref; do
     "${PYTHON_BIN}" -m pip install -e "${target}" || true
   fi
 
+  rm -rf "${target}/.git" "${target}/.github" "${target}/tests"
+  find "${target}" -type d -name __pycache__ -prune -exec rm -rf {} +
 done < /opt/claude-ltx/custom_nodes.txt
 
 install_bundled_nodepacks() {
