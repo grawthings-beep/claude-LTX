@@ -44,7 +44,7 @@ while IFS='|' read -r name url ref; do
 
   if [[ -f "${target}/pyproject.toml" ]]; then
     echo "Installing package ${name}"
-    "${PYTHON_BIN}" -m pip install -e "${target}"
+    "${PYTHON_BIN}" -m pip install -e "${target}" || true
   fi
 
   if [[ "${name}" == "ComfyUI-Frame-Interpolation" && -f "${target}/install.py" ]]; then
