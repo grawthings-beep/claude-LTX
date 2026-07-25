@@ -216,14 +216,34 @@ def bearer_token(headers):
     return None
 
 
+def normalize_hf_etag(etag):
+    if not etag:
+        return ""
+    value = str(etag).strip()
+    if value.startswith("W/"):
+        value = value[2:].strip()
+    return value.strip('"').upper()
+
+
 def run_hf_hub(url, output, headers):
-    from huggingface_hub import hf_hub_download
+    from huggingface_hub import get_hf_file_metadata, hf_hub_download, hf_hub_url
 
     parsed = parse_huggingface_url(url)
     if not parsed:
         raise ValueError(f"not a supported Hugging Face resolve URL: {url}")
 
     repo_id, revision, filename = parsed
+    token = bearer_token(headers)
+    remote_etag = ""
+    try:
+        metadata = get_hf_file_metadata(
+            hf_hub_url(repo_id, filename, revision=revision),
+            token=token,
+        )
+        remote_etag = normalize_hf_etag(metadata.etag)
+    except Exception as exc:
+        log(f"WARN: could not read Hugging Face content hash: {exc}", error=True)
+
     output.parent.mkdir(parents=True, exist_ok=True)
     log(f"HF_XET: {repo_id}/{filename} (revision {revision})")
     downloaded = pathlib.Path(
@@ -232,13 +252,14 @@ def run_hf_hub(url, output, headers):
             filename=filename,
             revision=revision,
             local_dir=str(output.parent),
-            token=bearer_token(headers),
+            token=token,
         )
     )
 
     if downloaded.resolve() != output.resolve():
         output.parent.mkdir(parents=True, exist_ok=True)
         downloaded.replace(output)
+    return remote_etag
 
 
 def partial_path(output):
@@ -399,11 +420,12 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
     try:
         log(f"DOWNLOAD: {name}")
         download_started = time.monotonic()
+        trusted_sha = ""
         if method == "curl" and shutil.which("curl"):
             run_curl(url, output, headers)
         elif method in {"", "auto", "hf", "huggingface"} and parse_huggingface_url(url):
             try:
-                run_hf_hub(url, output, headers)
+                trusted_sha = run_hf_hub(url, output, headers)
             except Exception as exc:
                 log(
                     f"WARN hf_xet failed for {name}; falling back to aria2c: {exc}",
@@ -430,7 +452,10 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
         if min_bytes and output.stat().st_size < min_bytes:
             raise RuntimeError(f"downloaded file is too small for {output.name}: {output.stat().st_size} bytes")
         if expected_sha:
-            if not verify_sha256(output, expected_sha, name, verify_hashes):
+            if verify_hashes == "once" and trusted_sha == expected_sha:
+                write_verification_marker(output, expected_sha)
+                log(f"OK verified by Hugging Face content hash: {name}")
+            elif not verify_sha256(output, expected_sha, name, verify_hashes):
                 raise RuntimeError(f"sha256 mismatch for {output.name}")
         if extract:
             names = extract_archive(output, output.parent, extract)
@@ -471,6 +496,7 @@ def main():
             log(f"SKIP disabled: {entry.get('name') or entry.get('path')}")
             continue
         entries.append(entry)
+    entries.sort(key=lambda entry: int(entry.get("priority", 100)))
 
     jobs = max(1, args.jobs)
     if jobs == 1 or len(entries) <= 1:

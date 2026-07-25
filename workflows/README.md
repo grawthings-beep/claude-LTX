@@ -2,16 +2,20 @@
 
 Bundled workflows:
 
+- `original.json`
 - `i2v.json`
 - `loop.json`
 
-`i2v.json` is the normal LTX 2.3 I2V workflow. It uses the 10Eros checkpoint,
-the official distilled 384 LoRA at `0.5`, the LTX 2.3 dev fp8 audio stack, and
-the LTX spatial x2 upscaler. Its final size is `1728x1152`.
+`original.json` preserves the uploaded reference graph, including its AnimeSharp
+and RIFE side-output branch. Its requested model and output settings are 10Eros
+and `1728x1152`.
 
-`loop.json` keeps the same model and LoRA stack but replaces both samplers with
-the bundled `LTX Mobius Sampler`. The sampler cyclically shifts video and audio
-latents during denoising. `LTX Loop Decode` wraps temporal context around the
-causal video VAE, and `LTX Loop Audio Seam` smooths the audio boundary. The loop
-workflow uses `161` frames so its latent/video duration follows LTX's `8n+1`
-temporal layout.
+`i2v.json` keeps the same graph and model stack but disables the optional RIFE
+side-output branch. The main LTX output keeps its original audio timing.
+
+`loop.json` starts from the same intact graph as `i2v.json`. In both the low-
+and high-resolution sampling stages, the input image is passed to the built-in
+`LTXVAddGuide` node at frame `0` and frame `-1`, each at strength `0.7`. This is
+the FLF2V conditioning pattern used by the official ComfyUI LTX workflow, not a
+final-frame image overwrite. The audio boundary is smoothed without changing
+duration. The workflow uses `161` frames to follow LTX's `8n+1` layout.

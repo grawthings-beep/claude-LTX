@@ -665,7 +665,7 @@
       ],
       "flags": {},
       "order": 16,
-      "mode": 2,
+      "mode": 0,
       "inputs": [
         {
           "name": "upscale_model",
@@ -746,7 +746,7 @@
         "collapsed": true
       },
       "order": 19,
-      "mode": 2,
+      "mode": 0,
       "inputs": [
         {
           "name": "frames",
@@ -877,7 +877,7 @@
         }
       },
       "widgets_values": [
-        "video/i2v",
+        "video/original",
         "auto",
         "auto"
       ]
@@ -1201,7 +1201,7 @@
       ],
       "flags": {},
       "order": 21,
-      "mode": 2,
+      "mode": 0,
       "inputs": [
         {
           "name": "images",
@@ -1243,14 +1243,14 @@
       "widgets_values": {
         "frame_rate": 32,
         "loop_count": 0,
-        "filename_prefix": "video\\optional_rife_disabled\\i2v_rife",
+        "filename_prefix": "video\\32FPS\\WAN2.2_14B_I2V_GGUF_32FPS",
         "format": "video/h264-mp4",
         "pix_fmt": "yuv420p",
         "crf": 8,
         "save_metadata": true,
         "trim_to_audio": false,
         "pingpong": false,
-        "save_output": false,
+        "save_output": true,
         "videopreview": {
           "hidden": true,
           "paused": false,

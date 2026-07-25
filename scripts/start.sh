@@ -19,7 +19,7 @@ wait_for_gpu() {
     return 0
   fi
 
-  local timeout="${GPU_WAIT_TIMEOUT:-600}"
+  local timeout="${GPU_WAIT_TIMEOUT:-120}"
   local interval="${GPU_WAIT_INTERVAL:-3}"
   local started="${SECONDS}"
   local elapsed=0
@@ -33,10 +33,11 @@ wait_for_gpu() {
 
   while true; do
     if command -v nvidia-smi >/dev/null 2>&1 \
-      && nvidia-smi -L >/dev/null 2>&1 \
-      && gpu_name="$("${PYTHON_BIN}" -c \
-        'import torch; torch.cuda.init(); assert torch.cuda.is_available(); print(torch.cuda.get_device_name(torch.cuda.current_device()))' \
-        2>/dev/null)"; then
+      && gpu_name="$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n 1)" \
+      && [[ -n "${gpu_name}" ]] \
+      && "${PYTHON_BIN}" -c \
+        'import ctypes; c=ctypes.CDLL("libcuda.so.1"); n=ctypes.c_int(); raise SystemExit(0 if c.cuInit(0) == 0 and c.cuDeviceGetCount(ctypes.byref(n)) == 0 and n.value > 0 else 1)' \
+        >/dev/null 2>&1; then
       echo "GPU ready: ${gpu_name}"
       return 0
     fi
@@ -52,7 +53,7 @@ wait_for_gpu() {
     fi
 
     if (( elapsed >= next_report )); then
-      echo "Waiting for RunPod GPU allocation (${elapsed}s/${timeout}s)..."
+      echo "Waiting for the NVIDIA driver (${elapsed}s/${timeout}s)..."
       next_report=$((elapsed + 10))
     fi
     sleep "${interval}"
@@ -97,14 +98,6 @@ mkdir -p "${WORKSPACE_DIR}/input" \
 
 install_bundled_workflows() {
   local workflow
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/ltx23_official_*.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/00_recommended_i2v_identity_lock_10eros.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_experimental_i2v_cyclic_phasecut_10eros.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/03_experimental_i2v_cyclic_phasecut_1152x896_10eros.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_i2v_1152x896_cyclic_phasecut_10eros.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/video_ltx23_i2v_*.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/01_recommended_i2v_simple_10eros.json
-  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_reference_ltx23_i2v_1152x896_phut_hon.json
   for workflow in /opt/claude-ltx/workflows/*.json; do
     [[ -e "${workflow}" ]] || continue
     install -m 0644 "${workflow}" "${COMFYUI_WORKFLOW_DIR}/$(basename "${workflow}")"

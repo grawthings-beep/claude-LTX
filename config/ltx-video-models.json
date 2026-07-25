@@ -3,6 +3,7 @@
     {
       "name": "10Eros fp8mixed learned checkpoint",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/TenStrip/LTX2.3-10Eros/resolve/main/10Eros_v1-fp8mixed_learned.safetensors?download=true",
       "path": "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
       "sha256": "5c00038d4f1527e9842a832eb35192990de410ed2dd722c70aaf0f23cb3c9fd6",
@@ -12,7 +13,7 @@
     },
     {
       "name": "LTX 2.3 22B dev fp8 checkpoint",
-      "enabled": true,
+      "enabled": false,
       "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors?download=true",
       "path": "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors",
       "headers": {
@@ -22,6 +23,7 @@
     {
       "name": "Gemma 3 12B text encoder fp4 mixed",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true",
       "path": "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
       "headers": {
@@ -40,8 +42,19 @@
     {
       "name": "LTX 2.3 spatial upscaler x2 1.1",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors?download=true",
       "path": "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "AnimeSharpV4 x2 RCAN upscaler (original workflow)",
+      "enabled": true,
+      "priority": 0,
+      "url": "https://huggingface.co/Kim2091/2x-AnimeSharpV4/resolve/main/2x-AnimeSharpV4_RCAN.safetensors?download=true",
+      "path": "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
       "headers": {
         "Authorization": "Bearer ${HF_TOKEN}"
       }
@@ -58,6 +71,7 @@
     {
       "name": "LTX 2.3 distilled LoRA 384",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384.safetensors?download=true",
       "path": "models/loras/ltx-2.3-22b-distilled-lora-384.safetensors",
       "headers": {
@@ -76,6 +90,7 @@
     {
       "name": "LTX 2.3 Phut hon LoRA (reference workflow)",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/Sentinel7/ltxv/resolve/main/2496953/2806861/LTX-2.3-Phut%20hon.safetensors?download=true",
       "path": "models/loras/LTX23/LTX-2.3-Phut hon.safetensors",
       "headers": {
@@ -85,6 +100,7 @@
     {
       "name": "LTX 2 Image2Video Adapter LoRA",
       "enabled": true,
+      "priority": 0,
       "url": "https://huggingface.co/MachineDelusions/LTX-2_Image2Video_Adapter_LoRa/resolve/main/LTX-2-Image2Vid-Adapter.safetensors?download=true",
       "path": "models/loras/LTX23/LTX-2-Image2Vid-Adapter.safetensors",
       "headers": {

@@ -7,19 +7,16 @@ import sys
 REQUIRED_CUSTOM_NODES = [
     "10S_Nodes",
     "rgthree-comfy",
-    "ComfyMath",
     "ComfyUI-VideoHelperSuite",
-    "ComfyUI-LTXVideo",
-    "RES4LYF",
-    "ComfyUI-KJNodes",
+    "ComfyUI-Frame-Interpolation",
     "ComfyUI-LTXLoop",
 ]
 
 REQUIRED_MODELS = [
     "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
-    "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors",
     "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
     "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+    "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
     "models/loras/ltx-2.3-22b-distilled-lora-384.safetensors",
     "models/loras/LTX23/LTX-2.3-Phut hon.safetensors",
     "models/loras/LTX23/LTX-2-Image2Vid-Adapter.safetensors",

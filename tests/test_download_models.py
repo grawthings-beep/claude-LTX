@@ -43,15 +43,24 @@ class DownloadModelsTest(unittest.TestCase):
                 nested.write_bytes(b"xet data")
                 return str(nested)
 
-            fake_module = types.SimpleNamespace(hf_hub_download=fake_download)
+            fake_module = types.SimpleNamespace(
+                get_hf_file_metadata=lambda url, token: types.SimpleNamespace(
+                    etag='"abc123"'
+                ),
+                hf_hub_download=fake_download,
+                hf_hub_url=lambda repo_id, filename, revision: (
+                    f"https://huggingface.co/{repo_id}/resolve/{revision}/{filename}"
+                ),
+            )
             with mock.patch.dict(sys.modules, {"huggingface_hub": fake_module}):
-                download_models.run_hf_hub(
+                remote_etag = download_models.run_hf_hub(
                     "https://huggingface.co/org/repo/resolve/main/nested/model.safetensors",
                     output,
                     {"Authorization": "Bearer token"},
                 )
 
             self.assertEqual(output.read_bytes(), b"xet data")
+            self.assertEqual(remote_etag, "ABC123")
 
     def test_aria2_uses_partial_file_then_renames_atomically(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -99,6 +108,37 @@ class DownloadModelsTest(unittest.TestCase):
                 side_effect=AssertionError("file should not be rehashed"),
             ):
                 self.assertTrue(download_models.verify_sha256(output, expected, "model", "once"))
+
+    def test_fresh_hf_download_trusts_matching_content_hash(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+            content = b"model data"
+            expected = hashlib.sha256(content).hexdigest().upper()
+            entry = {
+                "name": "model",
+                "url": "https://huggingface.co/org/repo/resolve/main/model.safetensors",
+                "path": "models/model.safetensors",
+                "sha256": expected,
+            }
+
+            def fake_hf_download(url, output, headers):
+                output.parent.mkdir(parents=True)
+                output.write_bytes(content)
+                return expected
+
+            with mock.patch.object(
+                download_models,
+                "run_hf_hub",
+                side_effect=fake_hf_download,
+            ), mock.patch.object(
+                download_models,
+                "sha256_file",
+                side_effect=AssertionError("fresh Xet file should not be rehashed"),
+            ):
+                download_models.download(entry, root, True, 8, 8, "once")
+
+            output = root / entry["path"]
+            self.assertTrue(download_models.has_cached_verification(output, expected))
 
 
 if __name__ == "__main__":

@@ -21,10 +21,10 @@ class ManifestTests(unittest.TestCase):
                  if entry.get("enabled", True)}
         expected = {
             "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
-            "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors",
             "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
             "models/text_encoders/ltx-2.3_text_projection_bf16.safetensors",
             "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+            "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
             "models/loras/ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
             "models/loras/ltx-2.3-22b-distilled-lora-384.safetensors",
             "models/loras/LTX23/LTX-2.3-Phut hon.safetensors",
@@ -39,6 +39,26 @@ class ManifestTests(unittest.TestCase):
             "models/loras/ltx23/throat_bulge-10Eros_i2v_v1.0.safetensors",
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
+
+    def test_workflow_models_download_before_optional_models(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        by_path = {entry["path"]: entry for entry in manifest["models"]}
+        startup_paths = {
+            "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
+            "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
+            "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+            "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
+            "models/loras/ltx-2.3-22b-distilled-lora-384.safetensors",
+            "models/loras/LTX23/LTX-2.3-Phut hon.safetensors",
+            "models/loras/LTX23/LTX-2-Image2Vid-Adapter.safetensors",
+        }
+
+        self.assertTrue(all(by_path[path]["priority"] == 0 for path in startup_paths))
+        self.assertFalse(
+            by_path[
+                "models/checkpoints/ltx-2.3-22b-dev-fp8.safetensors"
+            ]["enabled"]
+        )
 
 
 if __name__ == "__main__":
