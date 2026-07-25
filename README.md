@@ -15,7 +15,8 @@ MP4 workflow. It uses the official LTX 2.3 fp8 checkpoint, Phut hon LoRA, and
 Image2Vid Adapter LoRA, with `1152x896` output settings. The imported workflow
 also keeps its RIFE frame interpolation branch, so the image includes the
 `ComfyUI-Frame-Interpolation` node pack, `rife49.pth`, and the AnimeSharpV4 x2
-RCAN upscaler used by that branch.
+RCAN upscaler used by that branch. The RIFE side branch is disabled by default;
+the normal output path preserves the generated video's timing and audio.
 
 ## RunPod Image
 

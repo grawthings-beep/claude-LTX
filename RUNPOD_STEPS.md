@@ -80,7 +80,8 @@ Replace the `LoadImage` image with your own source image.
 The reference workflow preserves the RIFE frame interpolation branch from the
 source JSON, so the image installs `ComfyUI-Frame-Interpolation` and `rife49.pth`
 during the image build. The branch's AnimeSharpV4 x2 RCAN upscaler is downloaded
-through the model manifest.
+through the model manifest. The RIFE/VHS branch is disabled by default; use the
+main `SaveVideo` output for normal-speed video with audio.
 
 Use the simple 10Eros fallback when you want fewer LoRA dependencies:
 
