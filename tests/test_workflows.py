@@ -286,6 +286,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("COPY custom_nodepacks/", dockerfile)
         self.assertIn("install_bundled_nodepacks", installer)
         self.assertIn("rife49.pth", installer)
+        self.assertIn('"SetImageSize": LTXSetImageSize', node_source)
         self.assertIn('"LTXSetImageSize": LTXSetImageSize', node_source)
         self.assertIn('"LTXMobiusSampler": LTXMobiusSampler', node_source)
         self.assertIn('"LTXLoopDecodeTiled": LTXLoopDecodeTiled', node_source)

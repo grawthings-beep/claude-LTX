@@ -57,6 +57,7 @@ class LoopNodeTests(unittest.TestCase):
         self.assertEqual(
             set(self.nodes.NODE_CLASS_MAPPINGS),
             {
+                "SetImageSize",
                 "LTXSetImageSize",
                 "LTXMobiusSampler",
                 "LTXLoopDecodeTiled",
@@ -68,6 +69,10 @@ class LoopNodeTests(unittest.TestCase):
         self.assertEqual(
             self.nodes.LTXSetImageSize().size(1728, 1152),
             (1728, 1152),
+        )
+        self.assertIs(
+            self.nodes.NODE_CLASS_MAPPINGS["SetImageSize"],
+            self.nodes.LTXSetImageSize,
         )
 
 

@@ -15,3 +15,6 @@ port, not an official Lightricks node.
 The bundled `loop.json` does not use the experimental Mobius sampler. It uses
 ComfyUI's official `LTXVAddGuide` first/last-frame conditioning and only uses
 `LTX Loop Audio Seam` from this pack.
+
+The pack also registers `SetImageSize` as a compatibility alias so the original
+workflow keeps its node type unchanged.

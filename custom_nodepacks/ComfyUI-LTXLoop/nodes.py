@@ -425,6 +425,7 @@ class LTXLoopAudioSeam:
 
 
 NODE_CLASS_MAPPINGS = {
+    "SetImageSize": LTXSetImageSize,
     "LTXSetImageSize": LTXSetImageSize,
     "LTXMobiusSampler": LTXMobiusSampler,
     "LTXLoopDecodeTiled": LTXLoopDecodeTiled,
@@ -432,6 +433,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SetImageSize": "Set Image Size",
     "LTXSetImageSize": "Set Image Size",
     "LTXMobiusSampler": "LTX Mobius Sampler",
     "LTXLoopDecodeTiled": "LTX Loop Decode",
