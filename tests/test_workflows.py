@@ -292,7 +292,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('"LTXLoopDecodeTiled": LTXLoopDecodeTiled', node_source)
         self.assertIn('"LTXLoopAudioSeam": LTXLoopAudioSeam', node_source)
 
-    def test_image_is_slimmed_and_waits_for_cuda(self):
+    def test_image_is_slimmed_and_starts_comfyui_immediately(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
 
@@ -302,11 +302,12 @@ class WorkflowTests(unittest.TestCase):
             dockerfile,
         )
         self.assertIn("check_workflow_nodes.py", dockerfile)
-        self.assertIn("wait_for_gpu", start)
-        self.assertIn("GPU_WAIT_TIMEOUT:-600", start)
-        self.assertIn('ctypes.CDLL("libcuda.so.1")', start)
-        self.assertIn("nvidia-smi --query-gpu=name", start)
-        self.assertLess(start.index("start_background_downloads"), start.rindex("wait_for_gpu"))
+        self.assertNotIn("wait_for_gpu", start)
+        self.assertNotIn("GPU_WAIT_TIMEOUT", start)
+        self.assertLess(
+            start.index("start_background_downloads"),
+            start.index('exec "${PYTHON_BIN}" main.py'),
+        )
 
     def test_start_script_preserves_existing_workflows(self):
         start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")

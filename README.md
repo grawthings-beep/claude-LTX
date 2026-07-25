@@ -31,10 +31,8 @@ Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
 The image uses a pinned CUDA 12.8 RunPod base for broad host-driver compatibility
-and bundles only the external node pack used by the workflows. ComfyUI checks
-the NVIDIA driver directly before starting, without repeatedly importing
-PyTorch, and allows up to 600 seconds for delayed RunPod GPU allocation. Set
-`WAIT_FOR_GPU=0` only for intentional CPU-only diagnostics.
+and bundles only the external node pack used by the workflows. ComfyUI starts
+immediately while model downloads continue in the background.
 
 ## Model Storage
 

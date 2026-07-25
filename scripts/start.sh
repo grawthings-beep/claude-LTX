@@ -13,53 +13,6 @@ PYTHON_BIN="$(find_python_bin)" || {
   exit 2
 }
 
-wait_for_gpu() {
-  if [[ "${WAIT_FOR_GPU:-1}" != "1" ]]; then
-    echo "GPU readiness check disabled."
-    return 0
-  fi
-
-  local timeout="${GPU_WAIT_TIMEOUT:-600}"
-  local interval="${GPU_WAIT_INTERVAL:-3}"
-  local started="${SECONDS}"
-  local elapsed=0
-  local next_report=0
-  local gpu_name
-
-  if ! [[ "${timeout}" =~ ^[0-9]+$ ]] || ! [[ "${interval}" =~ ^[1-9][0-9]*$ ]]; then
-    echo "ERROR: GPU_WAIT_TIMEOUT must be non-negative and GPU_WAIT_INTERVAL must be positive." >&2
-    return 2
-  fi
-
-  while true; do
-    if command -v nvidia-smi >/dev/null 2>&1 \
-      && gpu_name="$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n 1)" \
-      && [[ -n "${gpu_name}" ]] \
-      && "${PYTHON_BIN}" -c \
-        'import ctypes; c=ctypes.CDLL("libcuda.so.1"); n=ctypes.c_int(); raise SystemExit(0 if c.cuInit(0) == 0 and c.cuDeviceGetCount(ctypes.byref(n)) == 0 and n.value > 0 else 1)' \
-        >/dev/null 2>&1; then
-      echo "GPU ready: ${gpu_name}"
-      return 0
-    fi
-
-    elapsed=$((SECONDS - started))
-    if (( elapsed >= timeout )); then
-      echo "ERROR: CUDA was not usable after ${elapsed}s." >&2
-      nvidia-smi >&2 || true
-      "${PYTHON_BIN}" -c \
-        'import torch; print(f"torch={torch.__version__} cuda={torch.version.cuda} available={torch.cuda.is_available()}")' \
-        >&2 || true
-      return 3
-    fi
-
-    if (( elapsed >= next_report )); then
-      echo "Waiting for the NVIDIA driver (${elapsed}s/${timeout}s)..."
-      next_report=$((elapsed + 10))
-    fi
-    sleep "${interval}"
-  done
-}
-
 WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace/comfyui}"
 COMFYUI_USER_DIR="${COMFYUI_USER_DIR:-${WORKSPACE_DIR}/user}"
 COMFYUI_WORKFLOW_DIR="${COMFYUI_USER_DIR}/default/workflows"
@@ -229,8 +182,6 @@ else
       ;;
   esac
 fi
-
-wait_for_gpu
 
 cd "${COMFYUI_DIR}"
 echo "Starting ComfyUI on ${LISTEN}:${PORT} (model download mode: ${MODEL_DOWNLOAD_MODE})."
