@@ -42,11 +42,6 @@ while IFS='|' read -r name url ref; do
     "${PYTHON_BIN}" -m pip install -r "${target}/requirements.txt"
   fi
 
-  if [[ -f "${target}/pyproject.toml" ]]; then
-    echo "Installing package ${name}"
-    "${PYTHON_BIN}" -m pip install -e "${target}" || true
-  fi
-
   rm -rf "${target}/.git" "${target}/.github" "${target}/tests"
   find "${target}" -type d -name __pycache__ -prune -exec rm -rf {} +
 done < /opt/claude-ltx/custom_nodes.txt

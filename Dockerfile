@@ -13,10 +13,6 @@ RUN apt-get update \
         aria2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --upgrade \
-        "huggingface_hub>=0.32.0,<1.0" \
-        "hf_xet>=1.1.0"
-
 COPY custom_nodes.txt /opt/claude-ltx/custom_nodes.txt
 COPY custom_nodepacks/ /opt/claude-ltx/custom_nodepacks/
 COPY config/ /opt/claude-ltx/config/

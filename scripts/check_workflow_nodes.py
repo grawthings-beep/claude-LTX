@@ -32,6 +32,9 @@ def main():
     sys.path.insert(0, str(comfyui_dir))
     sys.argv = [sys.argv[0], "--cpu"]
 
+    import comfy.options
+
+    comfy.options.enable_args_parsing()
     import nodes
 
     asyncio.run(nodes.init_extra_nodes())
