@@ -19,7 +19,8 @@ COPY config/ /opt/claude-ltx/config/
 COPY scripts/ /opt/claude-ltx/scripts/
 COPY workflows/ /opt/claude-ltx/workflows/
 
-RUN rm -rf /opt/comfyui-baked/custom_nodes/ComfyUI-Manager \
+RUN find /opt/comfyui-baked/custom_nodes -mindepth 1 -maxdepth 1 \
+        -exec rm -rf {} + \
     && chmod +x /opt/claude-ltx/scripts/*.sh \
     && /opt/claude-ltx/scripts/install_custom_nodes.sh \
     && python3 /opt/claude-ltx/scripts/check_workflow_nodes.py \

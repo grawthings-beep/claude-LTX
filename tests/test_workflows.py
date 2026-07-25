@@ -222,7 +222,7 @@ class WorkflowTests(unittest.TestCase):
 
         self.assertIn("runpod/comfyui:1.4.1-cuda13.0@sha256:", dockerfile)
         self.assertIn(
-            "rm -rf /opt/comfyui-baked/custom_nodes/ComfyUI-Manager",
+            "find /opt/comfyui-baked/custom_nodes -mindepth 1 -maxdepth 1",
             dockerfile,
         )
         self.assertIn("check_workflow_nodes.py", dockerfile)
