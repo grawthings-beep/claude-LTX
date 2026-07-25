@@ -220,7 +220,7 @@ class WorkflowTests(unittest.TestCase):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
 
-        self.assertIn("runpod/comfyui:1.4.2-cuda12.8@sha256:", dockerfile)
+        self.assertIn("runpod/comfyui:1.4.1-cuda13.0@sha256:", dockerfile)
         self.assertIn(
             "rm -rf /opt/comfyui-baked/custom_nodes/ComfyUI-Manager",
             dockerfile,
