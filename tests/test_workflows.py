@@ -108,7 +108,31 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(nodes[329]["widgets_values"], ["2x-AnimeSharpV4_RCAN.safetensors"])
         self.assertEqual(nodes[330]["widgets_values"], ["rife49.pth", 10, 2, False, True, 1])
         self.assertEqual(nodes[331]["widgets_values"]["frame_rate"], 32)
+        self.assertIsNotNone(nodes[328]["inputs"][1]["link"])
+        image_link = next(
+            link for link in workflow["links"] if link[0] == nodes[328]["inputs"][1]["link"]
+        )
+        self.assertEqual(image_link[1:5], [326, 1, 328, 1])
+        self.assertEqual(nodes[326]["outputs"][1]["type"], "IMAGE")
         assert_graph_complete(self, workflow)
+
+    def test_reference_subgraph_exposes_decoded_frames_for_rife(self):
+        workflow = load_workflow(REFERENCE_WORKFLOW)
+        subgraph = workflow["definitions"]["subgraphs"][0]
+        nodes = {node["id"]: node for node in subgraph["nodes"]}
+        frame_outputs = [
+            output
+            for output in subgraph["outputs"]
+            if output["name"] == "IMAGE" and output["type"] == "IMAGE"
+        ]
+        self.assertEqual(len(frame_outputs), 1)
+        link_id = frame_outputs[0]["linkIds"][0]
+        link = next(link for link in subgraph["links"] if link["id"] == link_id)
+        self.assertEqual(
+            [link["origin_id"], link["origin_slot"], link["target_id"], link["target_slot"]],
+            [312, 0, -20, 1],
+        )
+        self.assertIn(link_id, nodes[312]["outputs"][0]["links"])
 
     def test_manifest_contains_supported_workflow_models(self):
         manifest = json.loads(

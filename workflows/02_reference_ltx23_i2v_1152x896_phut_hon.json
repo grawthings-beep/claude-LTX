@@ -2,7 +2,7 @@
   "id": "07824bbb-6672-4bb0-ac36-4313a519e35b",
   "revision": 0,
   "last_node_id": 331,
-  "last_link_id": 727,
+  "last_link_id": 729,
   "nodes": [
     {
       "id": 280,
@@ -461,6 +461,14 @@
           "links": [
             724
           ]
+        },
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 1,
+          "links": [
+            729
+          ]
         }
       ],
       "properties": {
@@ -675,7 +683,7 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": null
+          "link": 729
         }
       ],
       "outputs": [
@@ -1614,6 +1622,14 @@
       331,
       0,
       "IMAGE"
+    ],
+    [
+      729,
+      326,
+      1,
+      328,
+      1,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -1652,7 +1668,7 @@
         "state": {
           "lastGroupId": 26,
           "lastNodeId": 331,
-          "lastLinkId": 727,
+          "lastLinkId": 729,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -1673,7 +1689,7 @@
             443.7392787937106,
             4554.691712695965,
             120,
-            60
+            80
           ]
         },
         "inputs": [
@@ -1871,6 +1887,19 @@
             "pos": [
               463.7392787937106,
               4574.691712695965
+            ]
+          },
+          {
+            "id": "b8f8025a-c32c-4e86-bf69-aab6d3a361d8",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              728
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              463.7392787937106,
+              4594.691712695965
             ]
           }
         ],
@@ -2883,7 +2912,8 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  685
+                  685,
+                  728
                 ]
               }
             ],
@@ -4000,6 +4030,14 @@
             "target_id": -20,
             "target_slot": 0,
             "type": "VIDEO"
+          },
+          {
+            "id": 728,
+            "origin_id": 312,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "IMAGE"
           }
         ],
         "extra": {
