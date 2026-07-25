@@ -39,7 +39,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/claude-ltx:latest
-            ghcr.io/${{ github.repository_owner }}/claude-ltx:cuda13.0
             ghcr.io/${{ github.repository_owner }}/claude-ltx:cuda12.8
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=runpod/comfyui:1.4.1-cuda13.0@sha256:d49c7b0f8eb3fbf44725d210b2b0a86bdd8a972da7e32e5e73b0efafdebe3718
+ARG BASE_IMAGE=runpod/comfyui:1.4.1-cuda12.8@sha256:1f9de5f6c1183211b7fb43c626c48a11c5ff9bda6acde77781fa1f104aac3469
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \
