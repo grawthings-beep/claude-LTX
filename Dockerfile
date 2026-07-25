@@ -22,6 +22,7 @@ RUN python3 -m pip install --upgrade \
         "hf_xet>=1.1.0"
 
 COPY custom_nodes.txt /opt/claude-ltx/custom_nodes.txt
+COPY custom_nodepacks/ /opt/claude-ltx/custom_nodepacks/
 COPY config/ /opt/claude-ltx/config/
 COPY scripts/ /opt/claude-ltx/scripts/
 COPY workflows/ /opt/claude-ltx/workflows/

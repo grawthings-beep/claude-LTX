@@ -57,6 +57,8 @@ install_bundled_workflows() {
   rm -f "${COMFYUI_WORKFLOW_DIR}"/03_experimental_i2v_cyclic_phasecut_1152x896_10eros.json
   rm -f "${COMFYUI_WORKFLOW_DIR}"/02_i2v_1152x896_cyclic_phasecut_10eros.json
   rm -f "${COMFYUI_WORKFLOW_DIR}"/video_ltx23_i2v_*.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/01_recommended_i2v_simple_10eros.json
+  rm -f "${COMFYUI_WORKFLOW_DIR}"/02_reference_ltx23_i2v_1152x896_phut_hon.json
   for workflow in /opt/claude-ltx/workflows/*.json; do
     [[ -e "${workflow}" ]] || continue
     install -m 0644 "${workflow}" "${COMFYUI_WORKFLOW_DIR}/$(basename "${workflow}")"

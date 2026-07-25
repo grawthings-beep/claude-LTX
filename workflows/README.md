@@ -2,17 +2,16 @@
 
 Bundled workflows:
 
-- `01_recommended_i2v_simple_10eros.json`
-- `02_reference_ltx23_i2v_1152x896_phut_hon.json`
+- `i2v.json`
+- `loop.json`
 
-`01_recommended_i2v_simple_10eros.json` is the simple 10Eros I2V workflow.
+`i2v.json` is the normal LTX 2.3 I2V workflow. It uses the 10Eros checkpoint,
+the official distilled 384 LoRA at `0.5`, the LTX 2.3 dev fp8 audio stack, and
+the LTX spatial x2 upscaler. Its final size is `1728x1152`.
 
-`02_reference_ltx23_i2v_1152x896_phut_hon.json` is the imported reference
-workflow from `a914e520-9bc7-49bb-835f-b6717cd19ba3.json`. It preserves the
-`1152x896` LTX 2.3 I2V setup, the Phut hon and Image2Vid Adapter LoRAs, and the
-RIFE/VHS side branch from the source workflow. The side branch is disabled and
-does not save output by default because its `10x` interpolation settings change
-video duration unless the output frame rate and audio path are rebuilt together.
-The RIFE node comes from the `ComfyUI-Frame-Interpolation` custom node pack
-pinned in `custom_nodes.txt`. The image build also preinstalls `rife49.pth`; the
-AnimeSharpV4 x2 RCAN upscaler is listed in the model manifest.
+`loop.json` keeps the same model and LoRA stack but replaces both samplers with
+the bundled `LTX Mobius Sampler`. The sampler cyclically shifts video and audio
+latents during denoising. `LTX Loop Decode` wraps temporal context around the
+causal video VAE, and `LTX Loop Audio Seam` smooths the audio boundary. The loop
+workflow uses `161` frames so its latent/video duration follows LTX's `8n+1`
+temporal layout.

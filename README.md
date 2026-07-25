@@ -4,19 +4,16 @@ RunPod ComfyUI template for LTX I2V workflows.
 
 The bundled workflow set is intentionally small:
 
-- `01_recommended_i2v_simple_10eros.json`
-- `02_reference_ltx23_i2v_1152x896_phut_hon.json`
+- `i2v.json`
+- `loop.json`
 
-`01_recommended_i2v_simple_10eros.json` is the 10Eros-based simple I2V path.
-Use it as the stable fallback.
+`i2v.json` is the normal `1728x1152` I2V path. It uses the 10Eros checkpoint,
+the official distilled 384 LoRA at `0.5`, the LTX 2.3 dev fp8 audio/text stack,
+and the official LTX spatial x2 upscaler.
 
-`02_reference_ltx23_i2v_1152x896_phut_hon.json` is imported from the reference
-MP4 workflow. It uses the official LTX 2.3 fp8 checkpoint, Phut hon LoRA, and
-Image2Vid Adapter LoRA, with `1152x896` output settings. The imported workflow
-also keeps its RIFE frame interpolation branch, so the image includes the
-`ComfyUI-Frame-Interpolation` node pack, `rife49.pth`, and the AnimeSharpV4 x2
-RCAN upscaler used by that branch. The RIFE side branch is disabled by default;
-the normal output path preserves the generated video's timing and audio.
+`loop.json` is the experimental natural-loop path. Its bundled custom nodes port
+Mobius-style cyclic latent shifting to LTX, rotate video and audio together,
+decode with wrapped temporal context, and smooth the final audio boundary.
 
 ## RunPod Image
 

@@ -1,8 +1,8 @@
 {
   "id": "07824bbb-6672-4bb0-ac36-4313a519e35b",
   "revision": 0,
-  "last_node_id": 331,
-  "last_link_id": 727,
+  "last_node_id": 332,
+  "last_link_id": 728,
   "nodes": [
     {
       "id": 280,
@@ -229,14 +229,14 @@
         "secondTabWidth": 65,
         "models": [
           {
-            "name": "ltx-2.3-22b-dev-fp8.safetensors",
-            "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "name": "10Eros_v1-fp8mixed_learned.safetensors",
+            "url": "https://huggingface.co/TenStrip/LTX2.3-10Eros/resolve/main/10Eros_v1-fp8mixed_learned.safetensors",
             "directory": "checkpoints"
           }
         ]
       },
       "widgets_values": [
-        "ltx-2.3-22b-dev-fp8.safetensors"
+        "10Eros_v1-fp8mixed_learned.safetensors"
       ]
     },
     {
@@ -653,141 +653,6 @@
       "bgcolor": "#533"
     },
     {
-      "id": 328,
-      "type": "ImageUpscaleWithModel",
-      "pos": [
-        -581.3418035278337,
-        3964.5027847377332
-      ],
-      "size": [
-        233.5689453125,
-        46
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "upscale_model",
-          "type": "UPSCALE_MODEL",
-          "link": 725
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            726
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.9.2",
-        "Node name for S&R": "ImageUpscaleWithModel"
-      },
-      "widgets_values": [],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 329,
-      "type": "UpscaleModelLoader",
-      "pos": [
-        -896.6905190374882,
-        3962.6689611853963
-      ],
-      "size": [
-        270,
-        58
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "UPSCALE_MODEL",
-          "type": "UPSCALE_MODEL",
-          "links": [
-            725
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.9.2",
-        "Node name for S&R": "UpscaleModelLoader"
-      },
-      "widgets_values": [
-        "2x-AnimeSharpV4_RCAN.safetensors"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 330,
-      "type": "RIFE VFI",
-      "pos": [
-        -858.4721574302828,
-        4173.155863686385
-      ],
-      "size": [
-        319.1258239746094,
-        200
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 19,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "frames",
-          "type": "IMAGE",
-          "link": 726
-        },
-        {
-          "name": "optional_interpolation_states",
-          "shape": 7,
-          "type": "INTERPOLATION_STATES",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            727
-          ]
-        }
-      ],
-      "title": "Frame Interpolation (RIFE)",
-      "properties": {
-        "Node name for S&R": "RIFE VFI",
-        "cnr_id": "comfyui-frame-interpolation",
-        "ver": "1.0.6",
-        "widget_ue_connectable": {}
-      },
-      "widgets_values": [
-        "rife49.pth",
-        10,
-        2,
-        false,
-        true,
-        1
-      ],
-      "shape": 2
-    },
-    {
       "id": 300,
       "type": "PrimitiveBoolean",
       "pos": [
@@ -877,7 +742,7 @@
         }
       },
       "widgets_values": [
-        "video/LTX_2.3_i2v",
+        "video/loop",
         "auto",
         "auto"
       ]
@@ -1060,8 +925,8 @@
         }
       },
       "widgets_values": [
-        1152,
-        896
+        1728,
+        1152
       ],
       "color": "#232",
       "bgcolor": "#353"
@@ -1171,86 +1036,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 331,
-      "type": "VHS_VideoCombine",
-      "pos": [
-        -851.0680803563636,
-        4394.989821405215
-      ],
-      "size": [
-        579.6687004394621,
-        334
-      ],
-      "flags": {},
-      "order": 21,
-      "mode": 2,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 727
-        },
-        {
-          "name": "audio",
-          "shape": 7,
-          "type": "AUDIO",
-          "link": null
-        },
-        {
-          "name": "meta_batch",
-          "shape": 7,
-          "type": "VHS_BatchManager",
-          "link": null
-        },
-        {
-          "name": "vae",
-          "shape": 7,
-          "type": "VAE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Filenames",
-          "type": "VHS_FILENAMES",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfyui-videohelpersuite",
-        "ver": "4c7858ddd5126f7293dc3c9f6e0fc4c263cde079",
-        "Node name for S&R": "VHS_VideoCombine",
-        "widget_ue_connectable": {}
-      },
-      "widgets_values": {
-        "frame_rate": 32,
-        "loop_count": 0,
-        "filename_prefix": "video\\optional_rife_disabled\\reference_rife",
-        "format": "video/h264-mp4",
-        "pix_fmt": "yuv420p",
-        "crf": 8,
-        "save_metadata": true,
-        "trim_to_audio": false,
-        "pingpong": false,
-        "save_output": false,
-        "videopreview": {
-          "hidden": true,
-          "paused": false,
-          "params": {
-            "filename": "WAN2.2_14B_I2V_GGUF_32FPS_00014.mp4",
-            "subfolder": "video\\32FPS",
-            "type": "output",
-            "format": "video/h264-mp4",
-            "frame_rate": 32,
-            "workflow": "WAN2.2_14B_I2V_GGUF_32FPS_00014.png",
-            "fullpath": "C:\\B ComfyUI_windows_portable\\ComfyUI\\output\\video\\32FPS\\WAN2.2_14B_I2V_GGUF_32FPS_00014.mp4"
-          },
-          "muted": false
-        }
-      },
-      "shape": 2
-    },
-    {
       "id": 299,
       "type": "PrimitiveInt",
       "pos": [
@@ -1293,7 +1078,7 @@
         "secondTabWidth": 65
       },
       "widgets_values": [
-        162,
+        161,
         "fixed"
       ],
       "color": "#232",
@@ -1590,30 +1375,6 @@
       75,
       0,
       "VIDEO"
-    ],
-    [
-      725,
-      329,
-      0,
-      328,
-      0,
-      "UPSCALE_MODEL"
-    ],
-    [
-      726,
-      328,
-      0,
-      330,
-      0,
-      "IMAGE"
-    ],
-    [
-      727,
-      330,
-      0,
-      331,
-      0,
-      "IMAGE"
     ]
   ],
   "groups": [
@@ -2250,14 +2011,14 @@
           },
           {
             "id": 289,
-            "type": "KSamplerSelect",
+            "type": "LTXMobiusSampler",
             "pos": [
               -171.09761454054114,
               4386.663944887451
             ],
             "size": [
-              270,
-              88.88020833333334
+              320,
+              198
             ],
             "flags": {
               "collapsed": true
@@ -2276,9 +2037,7 @@
               }
             ],
             "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.56",
-              "Node name for S&R": "KSamplerSelect",
+              "Node name for S&R": "LTXMobiusSampler",
               "ue_properties": {
                 "widget_ue_connectable": {},
                 "version": "7.7",
@@ -2293,7 +2052,12 @@
               "secondTabWidth": 65
             },
             "widgets_values": [
-              "euler_ancestral_cfg_pp"
+              864,
+              576,
+              161,
+              4,
+              0,
+              1
             ]
           },
           {
@@ -2734,14 +2498,14 @@
           },
           {
             "id": 281,
-            "type": "KSamplerSelect",
+            "type": "LTXMobiusSampler",
             "pos": [
               -158.9223912621603,
               5061.986997125513
             ],
             "size": [
-              270,
-              88.88020833333334
+              320,
+              198
             ],
             "flags": {
               "collapsed": true
@@ -2760,9 +2524,7 @@
               }
             ],
             "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.75",
-              "Node name for S&R": "KSamplerSelect",
+              "Node name for S&R": "LTXMobiusSampler",
               "ue_properties": {
                 "widget_ue_connectable": {},
                 "version": "7.7",
@@ -2777,7 +2539,12 @@
               "secondTabWidth": 65
             },
             "widgets_values": [
-              "euler_cfg_pp"
+              1728,
+              1152,
+              161,
+              4,
+              0,
+              1
             ]
           },
           {
@@ -2849,7 +2616,7 @@
           },
           {
             "id": 312,
-            "type": "VAEDecodeTiled",
+            "type": "LTXLoopDecodeTiled",
             "pos": [
               116.57292035734919,
               3956.3298258578316
@@ -2888,9 +2655,7 @@
               }
             ],
             "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.14.1",
-              "Node name for S&R": "VAEDecodeTiled",
+              "Node name for S&R": "LTXLoopDecodeTiled",
               "ue_properties": {
                 "widget_ue_connectable": {},
                 "version": "7.7",
@@ -2908,7 +2673,8 @@
               768,
               64,
               4096,
-              4
+              4,
+              2
             ]
           },
           {
@@ -2999,7 +2765,7 @@
                 "name": "audio",
                 "shape": 7,
                 "type": "AUDIO",
-                "link": 686
+                "link": 728
               },
               {
                 "localized_name": "fps",
@@ -3040,6 +2806,52 @@
             },
             "widgets_values": [
               24
+            ]
+          },
+          {
+            "id": 332,
+            "type": "LTXLoopAudioSeam",
+            "pos": [
+              402,
+              3996
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 25,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "type": "AUDIO",
+                "link": 686
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "audio",
+                "name": "AUDIO",
+                "type": "AUDIO",
+                "links": [
+                  728
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "LTXLoopAudioSeam",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              120
             ]
           },
           {
@@ -3708,6 +3520,14 @@
           {
             "id": 686,
             "origin_id": 295,
+            "origin_slot": 0,
+            "target_id": 332,
+            "target_slot": 0,
+            "type": "AUDIO"
+          },
+          {
+            "id": 728,
+            "origin_id": 332,
             "origin_slot": 0,
             "target_id": 308,
             "target_slot": 1,

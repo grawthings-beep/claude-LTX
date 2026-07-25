@@ -69,22 +69,19 @@ MODEL_DOWNLOAD_MODE=blocking
 
 ## 5. Workflow choice
 
-Use the reference workflow for the `1152x896` setup from the sample MP4:
+Use the normal `1728x1152` I2V workflow:
 
 ```text
-02_reference_ltx23_i2v_1152x896_phut_hon.json
+i2v.json
 ```
 
 Replace the `LoadImage` image with your own source image.
 
-The reference workflow preserves the RIFE frame interpolation branch from the
-source JSON, so the image installs `ComfyUI-Frame-Interpolation` and `rife49.pth`
-during the image build. The branch's AnimeSharpV4 x2 RCAN upscaler is downloaded
-through the model manifest. The RIFE/VHS branch is disabled by default; use the
-main `SaveVideo` output for normal-speed video with audio.
-
-Use the simple 10Eros fallback when you want fewer LoRA dependencies:
+Use the experimental natural-loop workflow separately:
 
 ```text
-01_recommended_i2v_simple_10eros.json
+loop.json
 ```
+
+The loop workflow uses the bundled LTX Mobius sampler, cyclic VAE decode, and
+audio seam correction. It is independent from the normal I2V workflow.

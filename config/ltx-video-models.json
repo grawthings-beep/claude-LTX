@@ -47,15 +47,6 @@
       }
     },
     {
-      "name": "AnimeSharpV4 x2 RCAN upscaler (reference workflow)",
-      "enabled": true,
-      "url": "https://huggingface.co/Kim2091/2x-AnimeSharpV4/resolve/main/2x-AnimeSharpV4_RCAN.safetensors?download=true",
-      "path": "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
-      "headers": {
-        "Authorization": "Bearer ${HF_TOKEN}"
-      }
-    },
-    {
       "name": "TenStrip distilled LoRA condsafe",
       "enabled": true,
       "url": "https://huggingface.co/TenStrip/LTX2.3_Distilled_Lora_1.1_Experiments/resolve/main/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors?download=true",
