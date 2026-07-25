@@ -875,6 +875,24 @@
           "strength": 0.5,
           "strengthTwo": null
         },
+        {
+          "on": false,
+          "lora": "ltx23\\LTX-2.3jiggle.safetensors",
+          "strength": 1,
+          "strengthTwo": null
+        },
+        {
+          "on": false,
+          "lora": "ltx23\\LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
+          "strength": 1,
+          "strengthTwo": null
+        },
+        {
+          "on": false,
+          "lora": "ltx23\\throat_bulge-10Eros_i2v_v1.0.safetensors",
+          "strength": 1,
+          "strengthTwo": null
+        },
         {},
         ""
       ],

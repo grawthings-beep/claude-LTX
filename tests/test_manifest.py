@@ -34,6 +34,9 @@ class ManifestTests(unittest.TestCase):
             "models/loras/civitai/civitai_2849892.safetensors",
             "models/loras/ltx23/LTX2.3_reasoning_I2V_V3.safetensors",
             "models/loras/ltx23/ltx23_edit_anything_global_rank128_v1_9000steps_adamw.safetensors",
+            "models/loras/ltx23/LTX-2.3jiggle.safetensors",
+            "models/loras/ltx23/LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
+            "models/loras/ltx23/throat_bulge-10Eros_i2v_v1.0.safetensors",
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
 

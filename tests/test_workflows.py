@@ -146,6 +146,25 @@ class WorkflowTests(unittest.TestCase):
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, subgraph)
 
+    def test_optional_loras_are_available_in_both_workflows(self):
+        expected = {
+            "ltx23\\LTX-2.3jiggle.safetensors",
+            "ltx23\\LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
+            "ltx23\\throat_bulge-10Eros_i2v_v1.0.safetensors",
+        }
+        for name in (I2V_WORKFLOW, LOOP_WORKFLOW):
+            workflow = load_workflow(name)
+            nodes = {node["id"]: node for node in workflow["nodes"]}
+            power_loras = nodes[324]["widgets_values"]
+            optional_loras = {
+                widget["lora"]
+                for widget in power_loras
+                if isinstance(widget, dict)
+                and "lora" in widget
+                and not widget["on"]
+            }
+            self.assertTrue(expected.issubset(optional_loras), expected - optional_loras)
+
     def test_manifest_contains_supported_workflow_models(self):
         manifest = json.loads(
             (ROOT / "config" / "ltx-video-models.json").read_text(encoding="utf-8")

@@ -200,6 +200,45 @@
       "headers": {
         "Authorization": "Bearer ${HF_TOKEN}"
       }
+    },
+    {
+      "name": "LTX 2.3 Jiggle LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-civitai-backup/resolve/main/LTX-2.3jiggle.safetensors?download=true",
+      "path": "models/loras/ltx23/LTX-2.3jiggle.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "LTX 2.3 Blowjob Animation I2V v1.0 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-civitai-backup/resolve/main/LTX2.3_blowjob_animation_I2V_v1.0.safetensors?download=true",
+      "path": "models/loras/ltx23/LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
+    },
+    {
+      "name": "Throat Bulge 10Eros I2V v1.0 LoRA (uwgm)",
+      "enabled": true,
+      "required": false,
+      "requires_env": [
+        "HF_TOKEN"
+      ],
+      "url": "https://huggingface.co/uwgm/nikke-civitai-backup/resolve/main/throat_bulge-10Eros_i2v_v1.0.safetensors?download=true",
+      "path": "models/loras/ltx23/throat_bulge-10Eros_i2v_v1.0.safetensors",
+      "headers": {
+        "Authorization": "Bearer ${HF_TOKEN}"
+      }
     }
   ]
 }
