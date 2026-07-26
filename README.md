@@ -24,15 +24,18 @@ bundled node smooths the generated audio boundary without changing its duration.
 ## RunPod Image
 
 ```text
-ghcr.io/grawthings-beep/claude-ltx:cuda12.8
+ghcr.io/grawthings-beep/claude-ltx:cuda13.0
 ```
 
 Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
-The image uses a pinned CUDA 12.8 RunPod base for broad host-driver compatibility
-and bundles only the external node pack used by the workflows. ComfyUI starts
-immediately while model downloads continue in the background.
+The image uses a pinned CUDA 13.0 RunPod base with PyTorch cu130 for RTX 5090
+support and bundles only the external node pack used by the workflows. At
+startup it repairs missing NVIDIA UVM device nodes when the container permits
+it, then performs a low-level CUDA driver probe. ComfyUI starts immediately
+while model downloads continue in the background. The `cuda12.8` tag remains
+as a compatibility alias for existing templates.
 
 ## Model Storage
 

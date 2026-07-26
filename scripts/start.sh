@@ -49,6 +49,80 @@ mkdir -p "${WORKSPACE_DIR}/input" \
          "${MODEL_ROOT}/models/vae_approx" \
          "${CONFIG_DIR}"
 
+repair_nvidia_devices() {
+  local capability
+  local capability_args=()
+
+  command -v nvidia-modprobe >/dev/null 2>&1 || return 0
+
+  if [[ ! -e /dev/nvidia-uvm || ! -e /dev/nvidia-uvm-tools ]]; then
+    echo "Repairing missing NVIDIA UVM device nodes."
+    if ! nvidia-modprobe -c 0 -u; then
+      echo "WARN: nvidia-modprobe could not repair NVIDIA UVM device nodes." >&2
+    fi
+  fi
+
+  if [[ -d /proc/driver/nvidia/capabilities && ! -d /dev/nvidia-caps ]]; then
+    while IFS= read -r capability; do
+      capability_args+=("-f" "${capability}")
+    done < <(find /proc/driver/nvidia/capabilities -type f 2>/dev/null)
+
+    if (( ${#capability_args[@]} > 0 )); then
+      echo "Repairing missing NVIDIA capability device nodes."
+      if ! nvidia-modprobe "${capability_args[@]}"; then
+        echo "WARN: nvidia-modprobe could not repair NVIDIA capability device nodes." >&2
+      fi
+    fi
+  fi
+}
+
+probe_cuda_driver() {
+  "${PYTHON_BIN}" - <<'PY'
+import ctypes
+import pathlib
+
+try:
+    cuda = ctypes.CDLL("libcuda.so.1")
+except OSError as error:
+    print(f"CUDA driver probe failed to load libcuda.so.1: {error}")
+    raise SystemExit(1)
+
+result = cuda.cuInit(0)
+mapped_library = "unknown"
+for mapping in pathlib.Path("/proc/self/maps").read_text().splitlines():
+    if "libcuda.so" in mapping:
+        mapped_library = mapping.rsplit(maxsplit=1)[-1]
+        break
+
+print(f"CUDA driver probe: cuInit={result} libcuda={mapped_library}")
+raise SystemExit(result != 0)
+PY
+}
+
+prepare_cuda() {
+  command -v nvidia-smi >/dev/null 2>&1 || return 0
+
+  repair_nvidia_devices
+  if probe_cuda_driver; then
+    return 0
+  fi
+
+  echo "WARN: CUDA initialization failed; retrying device-node repair once." >&2
+  repair_nvidia_devices
+  sleep 1
+  if probe_cuda_driver; then
+    return 0
+  fi
+
+  echo "ERROR: NVIDIA is visible to nvidia-smi, but the CUDA driver cannot initialize." >&2
+  echo "ERROR: This indicates a RunPod host driver/runtime allocation problem." >&2
+  nvidia-smi || true
+  ls -la /dev/nvidia* 2>/dev/null || true
+  return 0
+}
+
+prepare_cuda
+
 install_bundled_workflows() {
   local workflow
   for workflow in /opt/claude-ltx/workflows/*.json; do

@@ -11,13 +11,13 @@ https://github.com/grawthings-beep/claude-LTX/actions
 Use this image:
 
 ```text
-ghcr.io/grawthings-beep/claude-ltx:cuda12.8
+ghcr.io/grawthings-beep/claude-ltx:cuda13.0
 ```
 
 ## 2. Template settings
 
 ```text
-Container Image: ghcr.io/grawthings-beep/claude-ltx:cuda12.8
+Container Image: ghcr.io/grawthings-beep/claude-ltx:cuda13.0
 HTTP Port: 8188
 Container Disk: 40 GB+
 Volume / Network Volume: 180 GB+

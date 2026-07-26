@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=runpod/comfyui:1.4.1-cuda12.8@sha256:1f9de5f6c1183211b7fb43c626c48a11c5ff9bda6acde77781fa1f104aac3469
+ARG BASE_IMAGE=runpod/comfyui:1.4.4-cuda13.0@sha256:949b0688db0692b97b9aab9efd1c8f5afe94cfaa32c32008f31bcafcff63baf1
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -6,11 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     PYTHONUNBUFFERED=1 \
     HF_XET_HIGH_PERFORMANCE=1 \
-    HF_HUB_DOWNLOAD_TIMEOUT=120
+    HF_HUB_DOWNLOAD_TIMEOUT=120 \
+    CUDA_FORCE_PRELOAD_LIBRARIES=0
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         aria2 \
+        nvidia-modprobe \
     && rm -rf /var/lib/apt/lists/*
 
 COPY custom_nodes.txt /opt/claude-ltx/custom_nodes.txt

@@ -295,15 +295,25 @@ class WorkflowTests(unittest.TestCase):
     def test_image_is_slimmed_and_starts_comfyui_immediately(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
+        build = (
+            ROOT / ".github" / "workflows" / "build-ghcr.yml"
+        ).read_text(encoding="utf-8")
 
-        self.assertIn("runpod/comfyui:1.4.1-cuda12.8@sha256:", dockerfile)
+        self.assertIn("runpod/comfyui:1.4.4-cuda13.0@sha256:", dockerfile)
+        self.assertIn("CUDA_FORCE_PRELOAD_LIBRARIES=0", dockerfile)
+        self.assertIn("nvidia-modprobe", dockerfile)
         self.assertIn(
             "find /opt/comfyui-baked/custom_nodes -mindepth 1 -maxdepth 1",
             dockerfile,
         )
         self.assertIn("check_workflow_nodes.py", dockerfile)
+        self.assertIn("repair_nvidia_devices", start)
+        self.assertIn("nvidia-modprobe -c 0 -u", start)
+        self.assertIn("cuInit", start)
         self.assertNotIn("wait_for_gpu", start)
         self.assertNotIn("GPU_WAIT_TIMEOUT", start)
+        self.assertIn("claude-ltx:cuda13.0", build)
+        self.assertIn("claude-ltx:cuda12.8", build)
         self.assertLess(
             start.index("start_background_downloads"),
             start.index('exec "${PYTHON_BIN}" main.py'),
