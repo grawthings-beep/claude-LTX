@@ -130,12 +130,11 @@ class WorkflowTests(unittest.TestCase):
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, workflow["definitions"]["subgraphs"][0])
 
-    def test_loop_workflow_generates_and_crops_a_two_stage_motion_bridge(self):
+    def test_loop_workflow_uses_normal_i2v_then_cyclic_phase_cut(self):
         workflow = load_workflow(LOOP_WORKFLOW)
         nodes = {node["id"]: node for node in workflow["nodes"]}
         subgraph = workflow["definitions"]["subgraphs"][0]
         subnodes = {node["id"]: node for node in subgraph["nodes"]}
-        sublinks = {link["id"]: link for link in subgraph["links"]}
         subtypes = [node["type"] for node in subnodes.values()]
 
         self.assertEqual(
@@ -166,51 +165,28 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(nodes[330]["mode"], 2)
         self.assertEqual(nodes[331]["type"], "VHS_VideoCombine")
         self.assertEqual(nodes[331]["mode"], 2)
-        self.assertEqual(nodes[299]["widgets_values"][0], 129)
+        self.assertEqual(nodes[299]["widgets_values"][0], 193)
         self.assertEqual(nodes[75]["widgets_values"][0], "video/loop")
 
         self.assertEqual(subnodes[294]["type"], "LTXVImgToVideoInplace")
         self.assertEqual(subnodes[286]["type"], "LTXVImgToVideoInplace")
         self.assertEqual(subnodes[312]["type"], "VAEDecodeTiled")
+        self.assertEqual(subnodes[400]["type"], "LTXLoopPhaseCut")
         self.assertEqual(
-            {
-                node_id: (subnodes[node_id]["type"], subnodes[node_id]["widgets_values"])
-                for node_id in (402, 403, 413, 414)
-            },
-            {
-                402: ("LTXVAddGuide", [0, 1.0]),
-                403: ("LTXVAddGuide", [-1, 1.0]),
-                413: ("LTXVAddGuide", [0, 1.0]),
-                414: ("LTXVAddGuide", [-1, 1.0]),
-            },
+            subnodes[400]["widgets_values"],
+            [24.0, 152, 8, 0.5, 64, 1],
         )
-        self.assertEqual(subnodes[400]["type"], "LTXLoopBridgeFrames")
-        self.assertEqual(subnodes[400]["widgets_values"], [9])
-        self.assertEqual(subnodes[401]["type"], "EmptyLTXVLatentVideo")
-        self.assertEqual(subnodes[401]["widgets_values"][2], 49)
-        self.assertEqual(subnodes[404]["type"], "LTXVEmptyLatentAudio")
-        self.assertEqual(subnodes[404]["widgets_values"][0], 49)
-        self.assertEqual(subnodes[411]["type"], "LTXVCropGuides")
-        self.assertEqual(subnodes[421]["type"], "LTXVCropGuides")
-        self.assertEqual(subnodes[424]["type"], "LTXLoopAssemble")
-        self.assertEqual(subnodes[424]["widgets_values"], [24.0, 9, 120])
-        self.assertEqual(subtypes.count("SamplerCustomAdvanced"), 4)
+        self.assertEqual(subtypes.count("SamplerCustomAdvanced"), 2)
+        self.assertNotIn("LTXVAddGuide", subtypes)
+        self.assertNotIn("LTXLoopBridgeFrames", subtypes)
+        self.assertNotIn("LTXLoopAssemble", subtypes)
         self.assertNotIn("LTXMobiusSampler", subtypes)
 
-        self.assertEqual(
-            sublinks[857],
-            {
-                "id": 857,
-                "origin_id": 420,
-                "origin_slot": 0,
-                "target_id": 421,
-                "target_slot": 2,
-                "type": "LATENT",
-            },
-        )
-        self.assertEqual(subnodes[422]["inputs"][0]["link"], 858)
-        self.assertEqual(subnodes[308]["inputs"][0]["link"], 865)
-        self.assertEqual(subnodes[308]["inputs"][1]["link"], 866)
+        self.assertEqual(subnodes[400]["inputs"][0]["link"], 800)
+        self.assertEqual(subnodes[400]["inputs"][1]["link"], 801)
+        self.assertEqual(subnodes[400]["inputs"][2]["link"], 802)
+        self.assertEqual(subnodes[308]["inputs"][0]["link"], 803)
+        self.assertEqual(subnodes[308]["inputs"][1]["link"], 804)
 
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, subgraph)
@@ -302,8 +278,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("rife49.pth", installer)
         self.assertIn('"SetImageSize": LTXSetImageSize', node_source)
         self.assertIn('"LTXSetImageSize": LTXSetImageSize', node_source)
-        self.assertIn('"LTXLoopBridgeFrames": LTXLoopBridgeFrames', node_source)
-        self.assertIn('"LTXLoopAssemble": LTXLoopAssemble', node_source)
+        self.assertIn('"LTXLoopPhaseCut": LTXLoopPhaseCut', node_source)
         self.assertIn('"LTXMobiusSampler": LTXMobiusSampler', node_source)
         self.assertIn('"LTXLoopDecodeTiled": LTXLoopDecodeTiled', node_source)
         self.assertIn('"LTXLoopAudioSeam": LTXLoopAudioSeam', node_source)

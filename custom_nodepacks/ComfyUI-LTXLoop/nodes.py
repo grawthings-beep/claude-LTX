@@ -44,208 +44,177 @@ def latent_video_shape(width, height, length):
     return VIDEO_CHANNELS, ((length - 1) // 8) + 1, height // 32, width // 32
 
 
-def _validate_bridge_context(context_frames):
-    if context_frames < 9 or (context_frames - 1) % 8:
-        raise ValueError("LTX bridge context must be 8n+1 frames and at least 9")
+def phase_cut_output_frames(loop_frames, blend_frames):
+    if loop_frames < 16:
+        raise ValueError("Loop period must be at least 16 frames")
+    if blend_frames < 2 or blend_frames * 2 >= loop_frames:
+        raise ValueError("Blend must be at least 2 frames and shorter than half the loop")
+    return loop_frames - blend_frames
 
 
-def bridge_frame_plan(original_frames, bridge_frames, context_frames):
-    _validate_bridge_context(context_frames)
-    if original_frames <= context_frames:
-        raise ValueError("Original video is too short for the bridge context")
-    if bridge_frames <= context_frames:
-        raise ValueError("Bridge video is too short for the bridge context")
-
-    original_keep = original_frames - context_frames
-    bridge_keep = bridge_frames - context_frames
-    return original_keep, bridge_keep, original_keep + bridge_keep
-
-
-def _audio_keep_samples(waveform, kept_frames, sample_rate, fps):
-    return min(
-        waveform.shape[-1],
-        max(1, round(sample_rate * kept_frames / fps)),
-    )
-
-
-def _smooth_audio_boundary(waveform, boundary, blend_samples):
-    blend_samples = min(
-        blend_samples,
-        boundary,
-        waveform.shape[-1] - boundary,
-    )
-    if blend_samples < 2:
-        return
-
-    left = waveform[..., boundary - blend_samples : boundary]
-    right = waveform[..., boundary : boundary + blend_samples]
-    midpoint = (left[..., -1:] + right[..., :1]) * 0.5
+def _smoothstep(length, device, dtype, dimensions):
     progress = torch.linspace(
         0.0,
         1.0,
-        blend_samples,
-        device=waveform.device,
-        dtype=waveform.dtype,
+        length,
+        device=device,
+        dtype=dtype,
     )
-    view_shape = [1] * waveform.ndim
-    view_shape[-1] = blend_samples
-    progress = progress.reshape(view_shape)
     smooth = progress * progress * (3.0 - 2.0 * progress)
-    left += (midpoint - left[..., -1:]) * smooth
-    right += (midpoint - right[..., :1]) * (1.0 - smooth)
+    shape = [1] * dimensions
+    shape[0 if dimensions == 4 else -1] = length
+    return smooth.reshape(shape)
 
 
-class LTXLoopBridgeFrames:
+class LTXLoopPhaseCut:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "images": ("IMAGE",),
-                "context_frames": (
-                    "INT",
-                    {
-                        "default": 9,
-                        "min": 9,
-                        "max": 257,
-                        "step": 8,
-                    },
-                ),
-            }
-        }
-
-    RETURN_TYPES = ("IMAGE", "IMAGE")
-    RETURN_NAMES = ("tail_context", "head_context")
-    FUNCTION = "split"
-    CATEGORY = "LTX/loop"
-    DESCRIPTION = (
-        "Extracts the final and initial 8n+1 frame motion contexts used to "
-        "condition an LTX bridge."
-    )
-
-    def split(self, images, context_frames):
-        frame_count = images.shape[0]
-        _validate_bridge_context(context_frames)
-        if frame_count <= context_frames:
-            raise ValueError("Video is too short for the bridge context")
-        return (
-            images[-context_frames:],
-            images[:context_frames],
-        )
-
-
-class LTXLoopAssemble:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "original_images": ("IMAGE",),
-                "bridge_images": ("IMAGE",),
-                "original_audio": ("AUDIO",),
-                "bridge_audio": ("AUDIO",),
+                "audio": ("AUDIO",),
                 "fps": (
                     "FLOAT",
                     {"default": 24.0, "min": 1.0, "max": 240.0, "step": 0.01},
                 ),
-                "context_frames": (
+                "loop_frames": (
                     "INT",
-                    {
-                        "default": 9,
-                        "min": 9,
-                        "max": 257,
-                        "step": 8,
-                    },
+                    {"default": 152, "min": 16, "max": 4096, "step": 1},
                 ),
-                "audio_blend_ms": (
+                "blend_frames": (
                     "INT",
-                    {
-                        "default": 120,
-                        "min": 0,
-                        "max": 2000,
-                        "step": 10,
-                    },
+                    {"default": 8, "min": 2, "max": 128, "step": 1},
+                ),
+                "motion_weight": (
+                    "FLOAT",
+                    {"default": 0.5, "min": 0.0, "max": 10.0, "step": 0.05},
+                ),
+                "score_size": (
+                    "INT",
+                    {"default": 64, "min": 16, "max": 256, "step": 16},
+                ),
+                "search_stride": (
+                    "INT",
+                    {"default": 1, "min": 1, "max": 32, "step": 1},
                 ),
             }
         }
 
-    RETURN_TYPES = ("IMAGE", "AUDIO")
-    RETURN_NAMES = ("images", "audio")
-    FUNCTION = "assemble"
+    RETURN_TYPES = ("IMAGE", "AUDIO", "FLOAT", "INT")
+    RETURN_NAMES = ("images", "audio", "seam_score", "start_index")
+    FUNCTION = "cut"
     CATEGORY = "LTX/loop"
     DESCRIPTION = (
-        "Removes duplicate bridge contexts, joins the cyclic frame sequence, "
-        "and smooths both audio boundaries without changing video duration."
+        "Selects the cyclic phase whose head/tail appearance and motion match "
+        "best, then overlap-adds the video and audio without regenerating motion."
     )
 
-    def assemble(
+    def cut(
         self,
-        original_images,
-        bridge_images,
-        original_audio,
-        bridge_audio,
+        images,
+        audio,
         fps,
-        context_frames,
-        audio_blend_ms,
+        loop_frames,
+        blend_frames,
+        motion_weight,
+        score_size,
+        search_stride,
     ):
         if fps <= 0:
             raise ValueError("fps must be positive")
+        phase_cut_output_frames(loop_frames, blend_frames)
+        frame_count = images.shape[0]
+        if frame_count < loop_frames:
+            raise ValueError(
+                f"Phase cut needs {loop_frames} frames but received {frame_count}"
+            )
 
-        original_frames = original_images.shape[0]
-        bridge_frames = bridge_images.shape[0]
-        original_keep, bridge_keep, _ = bridge_frame_plan(
-            original_frames,
-            bridge_frames,
-            context_frames,
+        score_images = images[..., :3].movedim(-1, 1)
+        score_images = torch.nn.functional.interpolate(
+            score_images,
+            size=(score_size, score_size),
+            mode="area",
         )
-        images = torch.cat(
-            (
-                original_images[:original_keep],
-                bridge_images[:bridge_keep],
-            ),
+        score_images = score_images.mean(dim=1)
+
+        best_start = 0
+        best_score = None
+        last_start = frame_count - loop_frames
+        candidates = list(range(0, last_start + 1, search_stride))
+        if candidates[-1] != last_start:
+            candidates.append(last_start)
+
+        for start in candidates:
+            end = start + loop_frames
+            head = score_images[start : start + blend_frames]
+            tail = score_images[end - blend_frames : end]
+            appearance = ((head - tail) ** 2).mean()
+            head_motion = head[1:] - head[:-1]
+            tail_motion = tail[1:] - tail[:-1]
+            motion = ((head_motion - tail_motion) ** 2).mean()
+            score = appearance + motion_weight * motion
+            score_value = float(score.item())
+            if best_score is None or score_value < best_score:
+                best_start = start
+                best_score = score_value
+
+        end = best_start + loop_frames
+        segment = images[best_start:end]
+        video_blend = _smoothstep(
+            blend_frames,
+            segment.device,
+            segment.dtype,
+            4,
+        )
+        seam = (
+            segment[-blend_frames:] * (1.0 - video_blend)
+            + segment[:blend_frames] * video_blend
+        )
+        output_images = torch.cat(
+            (segment[blend_frames:-blend_frames], seam),
             dim=0,
         )
 
-        original_rate = original_audio["sample_rate"]
-        bridge_rate = bridge_audio["sample_rate"]
-        if original_rate != bridge_rate:
-            raise ValueError(
-                "Original and bridge audio must use the same sample rate"
+        waveform = audio["waveform"]
+        sample_rate = audio["sample_rate"]
+        start_sample = min(
+            waveform.shape[-1],
+            round(best_start * sample_rate / fps),
+        )
+        end_sample = min(
+            waveform.shape[-1],
+            round(end * sample_rate / fps),
+        )
+        audio_segment = waveform[..., start_sample:end_sample]
+        blend_samples = min(
+            round(blend_frames * sample_rate / fps),
+            audio_segment.shape[-1] // 3,
+        )
+        if blend_samples < 2:
+            output_waveform = audio_segment
+        else:
+            audio_blend = _smoothstep(
+                blend_samples,
+                audio_segment.device,
+                audio_segment.dtype,
+                audio_segment.ndim,
+            )
+            audio_seam = (
+                audio_segment[..., -blend_samples:] * (1.0 - audio_blend)
+                + audio_segment[..., :blend_samples] * audio_blend
+            )
+            output_waveform = torch.cat(
+                (
+                    audio_segment[..., blend_samples:-blend_samples],
+                    audio_seam,
+                ),
+                dim=-1,
             )
 
-        original_waveform = original_audio["waveform"]
-        bridge_waveform = bridge_audio["waveform"]
-        if original_waveform.shape[:-1] != bridge_waveform.shape[:-1]:
-            raise ValueError(
-                "Original and bridge audio must use matching batch and channel shapes"
-            )
-
-        original_samples = _audio_keep_samples(
-            original_waveform,
-            original_keep,
-            original_rate,
-            fps,
-        )
-        bridge_samples = _audio_keep_samples(
-            bridge_waveform,
-            bridge_keep,
-            bridge_rate,
-            fps,
-        )
-        waveform = torch.cat(
-            (
-                original_waveform[..., :original_samples],
-                bridge_waveform[..., :bridge_samples],
-            ),
-            dim=-1,
-        ).clone()
-
-        blend_samples = round(original_rate * audio_blend_ms / 1000)
-        _smooth_audio_boundary(waveform, original_samples, blend_samples)
-
-        result = original_audio.copy()
-        result["waveform"] = waveform
-        result["sample_rate"] = original_rate
-        result = LTXLoopAudioSeam().blend(result, audio_blend_ms)[0]
-        return images, result
+        output_audio = audio.copy()
+        output_audio["waveform"] = output_waveform
+        output_audio["sample_rate"] = sample_rate
+        return output_images, output_audio, best_score, best_start
 
 
 def _roll_modalities(samples, video_shape, shift, inverse=False):
@@ -631,8 +600,7 @@ class LTXLoopAudioSeam:
 NODE_CLASS_MAPPINGS = {
     "SetImageSize": LTXSetImageSize,
     "LTXSetImageSize": LTXSetImageSize,
-    "LTXLoopBridgeFrames": LTXLoopBridgeFrames,
-    "LTXLoopAssemble": LTXLoopAssemble,
+    "LTXLoopPhaseCut": LTXLoopPhaseCut,
     "LTXMobiusSampler": LTXMobiusSampler,
     "LTXLoopDecodeTiled": LTXLoopDecodeTiled,
     "LTXLoopAudioSeam": LTXLoopAudioSeam,
@@ -641,8 +609,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SetImageSize": "Set Image Size",
     "LTXSetImageSize": "Set Image Size",
-    "LTXLoopBridgeFrames": "LTX Loop Bridge Frames",
-    "LTXLoopAssemble": "LTX Loop Assemble",
+    "LTXLoopPhaseCut": "Cyclic Loop Phase Cut",
     "LTXMobiusSampler": "LTX Mobius Sampler",
     "LTXLoopDecodeTiled": "LTX Loop Decode",
     "LTXLoopAudioSeam": "LTX Loop Audio Seam",

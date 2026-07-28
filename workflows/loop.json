@@ -1,8 +1,8 @@
 {
   "id": "07824bbb-6672-4bb0-ac36-4313a519e35b",
   "revision": 1,
-  "last_node_id": 424,
-  "last_link_id": 866,
+  "last_node_id": 400,
+  "last_link_id": 804,
   "nodes": [
     {
       "id": 280,
@@ -1311,7 +1311,7 @@
         "secondTabWidth": 65
       },
       "widgets_values": [
-        129,
+        193,
         "fixed"
       ],
       "color": "#232",
@@ -1668,14 +1668,14 @@
         "id": "e21c5a0b-2c30-4876-ab25-2ab4c59134d5",
         "version": 1,
         "state": {
-          "lastGroupId": 28,
-          "lastNodeId": 424,
-          "lastLinkId": 866,
+          "lastGroupId": 27,
+          "lastNodeId": 400,
+          "lastLinkId": 804,
           "lastRerouteId": 0
         },
         "revision": 0,
         "config": {},
-        "name": "LTX Loop Bridge",
+        "name": "LTX Cyclic Phase Cut",
         "inputNode": {
           "id": -10,
           "bounding": [
@@ -1688,7 +1688,7 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            5500,
+            520,
             4050,
             120,
             60
@@ -1741,9 +1741,7 @@
             "type": "VAE",
             "linkIds": [
               673,
-              666,
-              815,
-              861
+              666
             ],
             "localized_name": "audio_vae",
             "pos": [
@@ -1773,13 +1771,7 @@
               661,
               708,
               709,
-              710,
-              808,
-              812,
-              833,
-              836,
-              841,
-              859
+              710
             ],
             "localized_name": "vae",
             "pos": [
@@ -1821,9 +1813,7 @@
             "type": "MODEL",
             "linkIds": [
               699,
-              700,
-              819,
-              846
+              700
             ],
             "localized_name": "model",
             "pos": [
@@ -1836,8 +1826,7 @@
             "name": "upscale_model",
             "type": "LATENT_UPSCALE_MODEL",
             "linkIds": [
-              646,
-              832
+              646
             ],
             "localized_name": "upscale_model",
             "pos": [
@@ -1879,9 +1868,7 @@
             "type": "NOISE",
             "linkIds": [
               703,
-              635,
-              826,
-              853
+              635
             ],
             "localized_name": "noise",
             "pos": [
@@ -1900,7 +1887,7 @@
             ],
             "localized_name": "VIDEO",
             "pos": [
-              5520,
+              540,
               4070
             ]
           }
@@ -1948,7 +1935,7 @@
                 "links": [
                   670,
                   687,
-                  864
+                  802
                 ]
               },
               {
@@ -1956,8 +1943,7 @@
                 "name": "INT",
                 "type": "INT",
                 "links": [
-                  675,
-                  816
+                  675
                 ]
               }
             ],
@@ -2028,8 +2014,7 @@
                 "type": "CONDITIONING",
                 "links": [
                   633,
-                  640,
-                  806
+                  640
                 ]
               },
               {
@@ -2038,8 +2023,7 @@
                 "type": "CONDITIONING",
                 "links": [
                   634,
-                  641,
-                  807
+                  641
                 ]
               }
             ],
@@ -2918,8 +2902,7 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  800,
-                  801
+                  800
                 ]
               }
             ],
@@ -2984,7 +2967,7 @@
                 "name": "Audio",
                 "type": "AUDIO",
                 "links": [
-                  802
+                  801
                 ]
               }
             ],
@@ -3028,14 +3011,14 @@
                 "localized_name": "画像",
                 "name": "images",
                 "type": "IMAGE",
-                "link": 865
+                "link": 803
               },
               {
                 "localized_name": "オーディオ",
                 "name": "audio",
                 "shape": 7,
                 "type": "AUDIO",
-                "link": 866
+                "link": 804
               },
               {
                 "localized_name": "fps",
@@ -3202,8 +3185,7 @@
                 "name": "INT",
                 "type": "INT",
                 "links": [
-                  659,
-                  804
+                  659
                 ]
               }
             ],
@@ -3273,8 +3255,7 @@
                 "name": "INT",
                 "type": "INT",
                 "links": [
-                  658,
-                  803
+                  658
                 ]
               }
             ],
@@ -3590,14 +3571,14 @@
           },
           {
             "id": 400,
-            "type": "LTXLoopBridgeFrames",
+            "type": "LTXLoopPhaseCut",
             "pos": [
-              500,
+              120,
               3940
             ],
             "size": [
-              270,
-              100
+              330,
+              220
             ],
             "flags": {
               "collapsed": false
@@ -3609,1689 +3590,11 @@
                 "name": "images",
                 "type": "IMAGE",
                 "link": 800
-              }
-            ],
-            "outputs": [
-              {
-                "name": "tail_context",
-                "type": "IMAGE",
-                "links": [
-                  809,
-                  838
-                ]
-              },
-              {
-                "name": "head_context",
-                "type": "IMAGE",
-                "links": [
-                  814,
-                  843
-                ]
-              }
-            ],
-            "title": "Extract 9-frame motion contexts",
-            "properties": {
-              "Node name for S&R": "LTXLoopBridgeFrames",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              9
-            ]
-          },
-          {
-            "id": 401,
-            "type": "EmptyLTXVLatentVideo",
-            "pos": [
-              840,
-              4080
-            ],
-            "size": [
-              210,
-              130
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 26,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "幅",
-                "name": "width",
-                "type": "INT",
-                "widget": {
-                  "name": "width"
-                },
-                "link": 803
-              },
-              {
-                "localized_name": "高さ",
-                "name": "height",
-                "type": "INT",
-                "widget": {
-                  "name": "height"
-                },
-                "link": 804
-              },
-              {
-                "localized_name": "長さ",
-                "name": "length",
-                "type": "INT",
-                "widget": {
-                  "name": "length"
-                },
-                "link": null
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "潜在",
-                "name": "LATENT",
-                "type": "LATENT",
-                "links": [
-                  805
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.60",
-              "Node name for S&R": "EmptyLTXVLatentVideo",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              768,
-              512,
-              49,
-              1
-            ],
-            "title": "Bridge latent (49 frames)"
-          },
-          {
-            "flags": {
-              "collapsed": false
-            },
-            "id": 402,
-            "inputs": [
-              {
-                "link": 806,
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 807,
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 808,
-                "name": "vae",
-                "type": "VAE"
-              },
-              {
-                "link": 805,
-                "name": "latent",
-                "type": "LATENT"
-              },
-              {
-                "link": 809,
-                "name": "image",
-                "type": "IMAGE"
-              }
-            ],
-            "mode": 0,
-            "order": 27,
-            "outputs": [
-              {
-                "links": [
-                  810
-                ],
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  811
-                ],
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  813
-                ],
-                "name": "latent",
-                "type": "LATENT"
-              }
-            ],
-            "pos": [
-              1140,
-              3980
-            ],
-            "properties": {
-              "Node name for S&R": "LTXVAddGuide",
-              "cnr_id": "comfy-core",
-              "enableTabs": false,
-              "hasSecondTab": false,
-              "secondTabOffset": 80,
-              "secondTabText": "Send Back",
-              "secondTabWidth": 65,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "ue_properties": {
-                "input_ue_unconnectable": {},
-                "version": "7.7",
-                "widget_ue_connectable": {}
-              },
-              "ver": "0.12.3"
-            },
-            "size": [
-              260,
-              150
-            ],
-            "type": "LTXVAddGuide",
-            "widgets_values": [
-              0,
-              1.0
-            ],
-            "title": "Tail motion guide (9 frames)"
-          },
-          {
-            "flags": {
-              "collapsed": false
-            },
-            "id": 403,
-            "inputs": [
-              {
-                "link": 810,
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 811,
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 812,
-                "name": "vae",
-                "type": "VAE"
-              },
-              {
-                "link": 813,
-                "name": "latent",
-                "type": "LATENT"
-              },
-              {
-                "link": 814,
-                "name": "image",
-                "type": "IMAGE"
-              }
-            ],
-            "mode": 0,
-            "order": 28,
-            "outputs": [
-              {
-                "links": [
-                  820,
-                  828
-                ],
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  821,
-                  829
-                ],
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  817
-                ],
-                "name": "latent",
-                "type": "LATENT"
-              }
-            ],
-            "pos": [
-              1440,
-              3980
-            ],
-            "properties": {
-              "Node name for S&R": "LTXVAddGuide",
-              "cnr_id": "comfy-core",
-              "enableTabs": false,
-              "hasSecondTab": false,
-              "secondTabOffset": 80,
-              "secondTabText": "Send Back",
-              "secondTabWidth": 65,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "ue_properties": {
-                "input_ue_unconnectable": {},
-                "version": "7.7",
-                "widget_ue_connectable": {}
-              },
-              "ver": "0.12.3"
-            },
-            "size": [
-              260,
-              150
-            ],
-            "type": "LTXVAddGuide",
-            "widgets_values": [
-              -1,
-              1.0
-            ],
-            "title": "Head motion guide (9 frames)"
-          },
-          {
-            "id": 404,
-            "type": "LTXVEmptyLatentAudio",
-            "pos": [
-              840,
-              4260
-            ],
-            "size": [
-              270,
-              140
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 29,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "audio_vae",
-                "name": "audio_vae",
-                "type": "VAE",
-                "link": 815
-              },
-              {
-                "localized_name": "frames_number",
-                "name": "frames_number",
-                "type": "INT",
-                "widget": {
-                  "name": "frames_number"
-                },
-                "link": null
-              },
-              {
-                "localized_name": "frame_rate",
-                "name": "frame_rate",
-                "type": "INT",
-                "widget": {
-                  "name": "frame_rate"
-                },
-                "link": 816
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "Latent",
-                "name": "Latent",
-                "type": "LATENT",
-                "links": [
-                  818
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.68",
-              "Node name for S&R": "LTXVEmptyLatentAudio",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              49,
-              24,
-              1
-            ],
-            "title": "Bridge audio latent"
-          },
-          {
-            "id": 405,
-            "type": "LTXVConcatAVLatent",
-            "pos": [
-              1740,
-              4120
-            ],
-            "size": [
-              181.308203125,
-              46
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 30,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "video_latent",
-                "name": "video_latent",
-                "type": "LATENT",
-                "link": 817
-              },
-              {
-                "localized_name": "audio_latent",
-                "name": "audio_latent",
-                "type": "LATENT",
-                "link": 818
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "latent",
-                "name": "latent",
-                "type": "LATENT",
-                "links": [
-                  825
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.7.0",
-              "Node name for S&R": "LTXVConcatAVLatent",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Pack bridge AV - stage 1"
-          },
-          {
-            "id": 406,
-            "type": "CFGGuider",
-            "pos": [
-              1740,
-              3940
-            ],
-            "size": [
-              210,
-              98
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 31,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "モデル",
-                "name": "model",
-                "type": "MODEL",
-                "link": 819
-              },
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "link": 820
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "link": 821
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ガイダー",
-                "name": "GUIDER",
-                "type": "GUIDER",
-                "links": [
-                  822
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.64",
-              "Node name for S&R": "CFGGuider",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              1
-            ],
-            "title": "Bridge guider - stage 1"
-          },
-          {
-            "id": 407,
-            "type": "KSamplerSelect",
-            "pos": [
-              1740,
-              3840
-            ],
-            "size": [
-              270,
-              88.88020833333334
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 32,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "サンプラー",
-                "name": "SAMPLER",
-                "type": "SAMPLER",
-                "links": [
-                  823
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.56",
-              "Node name for S&R": "KSamplerSelect",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              "euler_ancestral_cfg_pp"
-            ],
-            "title": "Bridge sampler - stage 1"
-          },
-          {
-            "id": 408,
-            "type": "ManualSigmas",
-            "pos": [
-              1740,
-              4480
-            ],
-            "size": [
-              304.9433958333333,
-              74.02799999999934
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 33,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "シグマ",
-                "name": "SIGMAS",
-                "type": "SIGMAS",
-                "links": [
-                  824
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.14.1",
-              "Node name for S&R": "ManualSigmas",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              "1.0, 0.99375, 0.9875, 0.98125, 0.975, 0.909375, 0.725, 0.421875, 0.0"
-            ],
-            "title": "Bridge sigmas - stage 1"
-          },
-          {
-            "id": 409,
-            "type": "SamplerCustomAdvanced",
-            "pos": [
-              2020,
-              4030
-            ],
-            "size": [
-              221.9,
-              140
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 34,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "ノイズ",
-                "name": "noise",
-                "type": "NOISE",
-                "link": 826
-              },
-              {
-                "localized_name": "ガイダー",
-                "name": "guider",
-                "type": "GUIDER",
-                "link": 822
-              },
-              {
-                "localized_name": "サンプラー",
-                "name": "sampler",
-                "type": "SAMPLER",
-                "link": 823
-              },
-              {
-                "localized_name": "シグマ",
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 824
-              },
-              {
-                "localized_name": "潜在イメージ",
-                "name": "latent_image",
-                "type": "LATENT",
-                "link": 825
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "出力",
-                "name": "output",
-                "type": "LATENT",
-                "links": [
-                  827
-                ]
-              },
-              {
-                "localized_name": "ノイズ除去出力",
-                "name": "denoised_output",
-                "type": "LATENT",
-                "links": []
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.60",
-              "Node name for S&R": "SamplerCustomAdvanced",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Generate bridge - stage 1"
-          },
-          {
-            "id": 410,
-            "type": "LTXVSeparateAVLatent",
-            "pos": [
-              2300,
-              4030
-            ],
-            "size": [
-              240,
-              80
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 35,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "av_latent",
-                "name": "av_latent",
-                "type": "LATENT",
-                "link": 827
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ビデオlatent",
-                "name": "video_latent",
-                "type": "LATENT",
-                "links": [
-                  830
-                ]
-              },
-              {
-                "localized_name": "オーディオlatent",
-                "name": "audio_latent",
-                "type": "LATENT",
-                "links": [
-                  845
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "LTXVSeparateAVLatent",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Split bridge AV - stage 1"
-          },
-          {
-            "id": 411,
-            "type": "LTXVCropGuides",
-            "pos": [
-              2560,
-              3930
-            ],
-            "size": [
-              240,
-              100
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 36,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "link": 828
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "link": 829
-              },
-              {
-                "localized_name": "潜在",
-                "name": "latent",
-                "type": "LATENT",
-                "link": 830
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "links": [
-                  834
-                ]
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "links": [
-                  835
-                ]
-              },
-              {
-                "localized_name": "潜在",
-                "name": "latent",
-                "type": "LATENT",
-                "slot_index": 2,
-                "links": [
-                  831
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.68",
-              "Node name for S&R": "LTXVCropGuides",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Remove bridge guide latents - stage 1"
-          },
-          {
-            "id": 412,
-            "type": "LTXVLatentUpsampler",
-            "pos": [
-              2840,
-              4030
-            ],
-            "size": [
-              189,
-              66
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 37,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "サンプル",
-                "name": "samples",
-                "type": "LATENT",
-                "link": 831
-              },
-              {
-                "localized_name": "アップスケールモデル",
-                "name": "upscale_model",
-                "type": "LATENT_UPSCALE_MODEL",
-                "link": 832
-              },
-              {
-                "localized_name": "vae",
-                "name": "vae",
-                "type": "VAE",
-                "link": 833
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "潜在",
-                "name": "LATENT",
-                "type": "LATENT",
-                "links": [
-                  837
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.14.1",
-              "Node name for S&R": "LTXVLatentUpsampler",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Upscale bridge latent"
-          },
-          {
-            "flags": {
-              "collapsed": false
-            },
-            "id": 413,
-            "inputs": [
-              {
-                "link": 834,
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 835,
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 836,
-                "name": "vae",
-                "type": "VAE"
-              },
-              {
-                "link": 837,
-                "name": "latent",
-                "type": "LATENT"
-              },
-              {
-                "link": 838,
-                "name": "image",
-                "type": "IMAGE"
-              }
-            ],
-            "mode": 0,
-            "order": 38,
-            "outputs": [
-              {
-                "links": [
-                  839
-                ],
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  840
-                ],
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  842
-                ],
-                "name": "latent",
-                "type": "LATENT"
-              }
-            ],
-            "pos": [
-              3100,
-              3930
-            ],
-            "properties": {
-              "Node name for S&R": "LTXVAddGuide",
-              "cnr_id": "comfy-core",
-              "enableTabs": false,
-              "hasSecondTab": false,
-              "secondTabOffset": 80,
-              "secondTabText": "Send Back",
-              "secondTabWidth": 65,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "ue_properties": {
-                "input_ue_unconnectable": {},
-                "version": "7.7",
-                "widget_ue_connectable": {}
-              },
-              "ver": "0.12.3"
-            },
-            "size": [
-              260,
-              150
-            ],
-            "type": "LTXVAddGuide",
-            "widgets_values": [
-              0,
-              1.0
-            ],
-            "title": "Tail motion guide - high resolution"
-          },
-          {
-            "flags": {
-              "collapsed": false
-            },
-            "id": 414,
-            "inputs": [
-              {
-                "link": 839,
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 840,
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "link": 841,
-                "name": "vae",
-                "type": "VAE"
-              },
-              {
-                "link": 842,
-                "name": "latent",
-                "type": "LATENT"
-              },
-              {
-                "link": 843,
-                "name": "image",
-                "type": "IMAGE"
-              }
-            ],
-            "mode": 0,
-            "order": 39,
-            "outputs": [
-              {
-                "links": [
-                  847,
-                  855
-                ],
-                "name": "positive",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  848,
-                  856
-                ],
-                "name": "negative",
-                "type": "CONDITIONING"
-              },
-              {
-                "links": [
-                  844
-                ],
-                "name": "latent",
-                "type": "LATENT"
-              }
-            ],
-            "pos": [
-              3400,
-              3930
-            ],
-            "properties": {
-              "Node name for S&R": "LTXVAddGuide",
-              "cnr_id": "comfy-core",
-              "enableTabs": false,
-              "hasSecondTab": false,
-              "secondTabOffset": 80,
-              "secondTabText": "Send Back",
-              "secondTabWidth": 65,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "ue_properties": {
-                "input_ue_unconnectable": {},
-                "version": "7.7",
-                "widget_ue_connectable": {}
-              },
-              "ver": "0.12.3"
-            },
-            "size": [
-              260,
-              150
-            ],
-            "type": "LTXVAddGuide",
-            "widgets_values": [
-              -1,
-              1.0
-            ],
-            "title": "Head motion guide - high resolution"
-          },
-          {
-            "id": 415,
-            "type": "LTXVConcatAVLatent",
-            "pos": [
-              3700,
-              4120
-            ],
-            "size": [
-              181.308203125,
-              61.5
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 40,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "video_latent",
-                "name": "video_latent",
-                "type": "LATENT",
-                "link": 844
-              },
-              {
-                "localized_name": "audio_latent",
-                "name": "audio_latent",
-                "type": "LATENT",
-                "link": 845
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "latent",
-                "name": "latent",
-                "type": "LATENT",
-                "links": [
-                  852
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "LTXVConcatAVLatent",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Pack bridge AV - stage 2"
-          },
-          {
-            "id": 416,
-            "type": "CFGGuider",
-            "pos": [
-              3700,
-              3940
-            ],
-            "size": [
-              270,
-              126.66666666666667
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 41,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "モデル",
-                "name": "model",
-                "type": "MODEL",
-                "link": 846
               },
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "link": 847
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "link": 848
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ガイダー",
-                "name": "GUIDER",
-                "type": "GUIDER",
-                "links": [
-                  849
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.71",
-              "Node name for S&R": "CFGGuider",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              1
-            ],
-            "title": "Bridge guider - stage 2"
-          },
-          {
-            "id": 417,
-            "type": "KSamplerSelect",
-            "pos": [
-              3700,
-              3840
-            ],
-            "size": [
-              270,
-              88.88020833333334
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 42,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "サンプラー",
-                "name": "SAMPLER",
-                "type": "SAMPLER",
-                "links": [
-                  850
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.75",
-              "Node name for S&R": "KSamplerSelect",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              "euler_cfg_pp"
-            ],
-            "title": "Bridge sampler - stage 2"
-          },
-          {
-            "id": 418,
-            "type": "ManualSigmas",
-            "pos": [
-              3700,
-              4480
-            ],
-            "size": [
-              270,
-              90
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 43,
-            "mode": 0,
-            "inputs": [],
-            "outputs": [
-              {
-                "localized_name": "シグマ",
-                "name": "SIGMAS",
-                "type": "SIGMAS",
-                "links": [
-                  851
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "ManualSigmas",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              "0.85, 0.7250, 0.4219, 0.0"
-            ],
-            "title": "Bridge sigmas - stage 2"
-          },
-          {
-            "id": 419,
-            "type": "SamplerCustomAdvanced",
-            "pos": [
-              3980,
-              4030
-            ],
-            "size": [
-              221.9,
-              140
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 44,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "ノイズ",
-                "name": "noise",
-                "type": "NOISE",
-                "link": 853
-              },
-              {
-                "localized_name": "ガイダー",
-                "name": "guider",
-                "type": "GUIDER",
-                "link": 849
-              },
-              {
-                "localized_name": "サンプラー",
-                "name": "sampler",
-                "type": "SAMPLER",
-                "link": 850
-              },
-              {
-                "localized_name": "シグマ",
-                "name": "sigmas",
-                "type": "SIGMAS",
-                "link": 851
-              },
-              {
-                "localized_name": "潜在イメージ",
-                "name": "latent_image",
-                "type": "LATENT",
-                "link": 852
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "出力",
-                "name": "output",
-                "type": "LATENT",
-                "links": [
-                  854
-                ]
-              },
-              {
-                "localized_name": "ノイズ除去出力",
-                "name": "denoised_output",
-                "type": "LATENT",
-                "links": []
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.75",
-              "Node name for S&R": "SamplerCustomAdvanced",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Generate bridge - stage 2"
-          },
-          {
-            "id": 420,
-            "type": "LTXVSeparateAVLatent",
-            "pos": [
-              4260,
-              4030
-            ],
-            "size": [
-              193.2916015625,
-              80
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 45,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "av_latent",
-                "name": "av_latent",
-                "type": "LATENT",
-                "link": 854
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ビデオlatent",
-                "name": "video_latent",
-                "type": "LATENT",
-                "links": [
-                  857
-                ]
-              },
-              {
-                "localized_name": "オーディオlatent",
-                "name": "audio_latent",
-                "type": "LATENT",
-                "links": [
-                  860
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "LTXVSeparateAVLatent",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Split bridge AV - stage 2"
-          },
-          {
-            "id": 421,
-            "type": "LTXVCropGuides",
-            "pos": [
-              4520,
-              3930
-            ],
-            "size": [
-              240,
-              100
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 46,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "link": 855
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "link": 856
-              },
-              {
-                "localized_name": "潜在",
-                "name": "latent",
-                "type": "LATENT",
-                "link": 857
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "ポジティブ",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "links": []
-              },
-              {
-                "localized_name": "ネガティブ",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "links": []
-              },
-              {
-                "localized_name": "潜在",
-                "name": "latent",
-                "type": "LATENT",
-                "slot_index": 2,
-                "links": [
-                  858
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.3.68",
-              "Node name for S&R": "LTXVCropGuides",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Remove bridge guide latents - stage 2"
-          },
-          {
-            "id": 422,
-            "type": "VAEDecodeTiled",
-            "pos": [
-              4800,
-              3930
-            ],
-            "size": [
-              270,
-              200
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 47,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "サンプル",
-                "name": "samples",
-                "type": "LATENT",
-                "link": 858
-              },
-              {
-                "localized_name": "vae",
-                "name": "vae",
-                "type": "VAE",
-                "link": 859
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "画像",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  862
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.14.1",
-              "Node name for S&R": "VAEDecodeTiled",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [
-              768,
-              64,
-              4096,
-              4
-            ],
-            "title": "Decode bridge video"
-          },
-          {
-            "id": 423,
-            "type": "LTXVAudioVAEDecode",
-            "pos": [
-              4800,
-              4070
-            ],
-            "size": [
-              265.8984375,
-              80
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 48,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "samples",
-                "name": "samples",
-                "type": "LATENT",
-                "link": 860
-              },
-              {
-                "label": "Audio VAE",
-                "localized_name": "audio_vae",
-                "name": "audio_vae",
-                "type": "VAE",
-                "link": 861
-              }
-            ],
-            "outputs": [
               {
-                "localized_name": "Audio",
-                "name": "Audio",
+                "name": "audio",
                 "type": "AUDIO",
-                "links": [
-                  863
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.7.0",
-              "Node name for S&R": "LTXVAudioVAEDecode",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "version": "7.7",
-                "input_ue_unconnectable": {}
-              },
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65
-            },
-            "widgets_values": [],
-            "title": "Decode bridge audio"
-          },
-          {
-            "id": 424,
-            "type": "LTXLoopAssemble",
-            "pos": [
-              5120,
-              3960
-            ],
-            "size": [
-              300,
-              190
-            ],
-            "flags": {
-              "collapsed": false
-            },
-            "order": 49,
-            "mode": 0,
-            "inputs": [
-              {
-                "name": "original_images",
-                "type": "IMAGE",
                 "link": 801
-              },
-              {
-                "name": "bridge_images",
-                "type": "IMAGE",
-                "link": 862
-              },
-              {
-                "name": "original_audio",
-                "type": "AUDIO",
-                "link": 802
-              },
-              {
-                "name": "bridge_audio",
-                "type": "AUDIO",
-                "link": 863
               },
               {
                 "name": "fps",
@@ -5299,7 +3602,7 @@
                 "widget": {
                   "name": "fps"
                 },
-                "link": 864
+                "link": 802
               }
             ],
             "outputs": [
@@ -5307,20 +3610,30 @@
                 "name": "images",
                 "type": "IMAGE",
                 "links": [
-                  865
+                  803
                 ]
               },
               {
                 "name": "audio",
                 "type": "AUDIO",
                 "links": [
-                  866
+                  804
                 ]
+              },
+              {
+                "name": "seam_score",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "name": "start_index",
+                "type": "INT",
+                "links": []
               }
             ],
-            "title": "Assemble 160-frame seamless loop",
+            "title": "Automatic 6-second cyclic phase cut",
             "properties": {
-              "Node name for S&R": "LTXLoopAssemble",
+              "Node name for S&R": "LTXLoopPhaseCut",
               "ue_properties": {
                 "widget_ue_connectable": {},
                 "version": "7.7",
@@ -5329,31 +3642,21 @@
             },
             "widgets_values": [
               24.0,
-              9,
-              120
+              152,
+              8,
+              0.5,
+              64,
+              1
             ]
           }
         ],
         "groups": [
           {
             "id": 27,
-            "title": "Pass 2 - Motion Bridge (tail 9 -> head 9)",
+            "title": "Automatic phase selection and 8-frame overlap",
             "bounding": [
-              800,
-              3760,
-              4200,
-              850
-            ],
-            "color": "#3f789e",
-            "font_size": 24,
-            "flags": {}
-          },
-          {
-            "id": 28,
-            "title": "Assemble 160 frames / 24 fps",
-            "bounding": [
-              5060,
-              3860,
+              70,
+              3870,
               430,
               370
             ],
@@ -5805,527 +4108,31 @@
           },
           {
             "id": 801,
-            "origin_id": 312,
+            "origin_id": 295,
             "origin_slot": 0,
-            "target_id": 424,
-            "target_slot": 0,
-            "type": "IMAGE"
+            "target_id": 400,
+            "target_slot": 1,
+            "type": "AUDIO"
           },
           {
             "id": 802,
-            "origin_id": 295,
-            "origin_slot": 0,
-            "target_id": 424,
-            "target_slot": 2,
-            "type": "AUDIO"
-          },
-          {
-            "id": 803,
-            "origin_id": 290,
-            "origin_slot": 1,
-            "target_id": 401,
-            "target_slot": 0,
-            "type": "INT"
-          },
-          {
-            "id": 804,
-            "origin_id": 292,
-            "origin_slot": 1,
-            "target_id": 401,
-            "target_slot": 1,
-            "type": "INT"
-          },
-          {
-            "id": 805,
-            "origin_id": 401,
-            "origin_slot": 0,
-            "target_id": 402,
-            "target_slot": 3,
-            "type": "LATENT"
-          },
-          {
-            "id": 806,
-            "origin_id": 302,
-            "origin_slot": 0,
-            "target_id": 402,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 807,
-            "origin_id": 302,
-            "origin_slot": 1,
-            "target_id": 402,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 808,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 402,
-            "target_slot": 2,
-            "type": "VAE"
-          },
-          {
-            "id": 809,
-            "origin_id": 400,
-            "origin_slot": 0,
-            "target_id": 402,
-            "target_slot": 4,
-            "type": "IMAGE"
-          },
-          {
-            "id": 810,
-            "origin_id": 402,
-            "origin_slot": 0,
-            "target_id": 403,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 811,
-            "origin_id": 402,
-            "origin_slot": 1,
-            "target_id": 403,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 812,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 403,
-            "target_slot": 2,
-            "type": "VAE"
-          },
-          {
-            "id": 813,
-            "origin_id": 402,
-            "origin_slot": 2,
-            "target_id": 403,
-            "target_slot": 3,
-            "type": "LATENT"
-          },
-          {
-            "id": 814,
-            "origin_id": 400,
-            "origin_slot": 1,
-            "target_id": 403,
-            "target_slot": 4,
-            "type": "IMAGE"
-          },
-          {
-            "id": 815,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 404,
-            "target_slot": 0,
-            "type": "VAE"
-          },
-          {
-            "id": 816,
-            "origin_id": 296,
-            "origin_slot": 1,
-            "target_id": 404,
-            "target_slot": 2,
-            "type": "INT"
-          },
-          {
-            "id": 817,
-            "origin_id": 403,
-            "origin_slot": 2,
-            "target_id": 405,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 818,
-            "origin_id": 404,
-            "origin_slot": 0,
-            "target_id": 405,
-            "target_slot": 1,
-            "type": "LATENT"
-          },
-          {
-            "id": 819,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 406,
-            "target_slot": 0,
-            "type": "MODEL"
-          },
-          {
-            "id": 820,
-            "origin_id": 403,
-            "origin_slot": 0,
-            "target_id": 406,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 821,
-            "origin_id": 403,
-            "origin_slot": 1,
-            "target_id": 406,
-            "target_slot": 2,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 822,
-            "origin_id": 406,
-            "origin_slot": 0,
-            "target_id": 409,
-            "target_slot": 1,
-            "type": "GUIDER"
-          },
-          {
-            "id": 823,
-            "origin_id": 407,
-            "origin_slot": 0,
-            "target_id": 409,
-            "target_slot": 2,
-            "type": "SAMPLER"
-          },
-          {
-            "id": 824,
-            "origin_id": 408,
-            "origin_slot": 0,
-            "target_id": 409,
-            "target_slot": 3,
-            "type": "SIGMAS"
-          },
-          {
-            "id": 825,
-            "origin_id": 405,
-            "origin_slot": 0,
-            "target_id": 409,
-            "target_slot": 4,
-            "type": "LATENT"
-          },
-          {
-            "id": 826,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 409,
-            "target_slot": 0,
-            "type": "NOISE"
-          },
-          {
-            "id": 827,
-            "origin_id": 409,
-            "origin_slot": 0,
-            "target_id": 410,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 828,
-            "origin_id": 403,
-            "origin_slot": 0,
-            "target_id": 411,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 829,
-            "origin_id": 403,
-            "origin_slot": 1,
-            "target_id": 411,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 830,
-            "origin_id": 410,
-            "origin_slot": 0,
-            "target_id": 411,
-            "target_slot": 2,
-            "type": "LATENT"
-          },
-          {
-            "id": 831,
-            "origin_id": 411,
-            "origin_slot": 2,
-            "target_id": 412,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 832,
-            "origin_id": -10,
-            "origin_slot": 9,
-            "target_id": 412,
-            "target_slot": 1,
-            "type": "LATENT_UPSCALE_MODEL"
-          },
-          {
-            "id": 833,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 412,
-            "target_slot": 2,
-            "type": "VAE"
-          },
-          {
-            "id": 834,
-            "origin_id": 411,
-            "origin_slot": 0,
-            "target_id": 413,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 835,
-            "origin_id": 411,
-            "origin_slot": 1,
-            "target_id": 413,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 836,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 413,
-            "target_slot": 2,
-            "type": "VAE"
-          },
-          {
-            "id": 837,
-            "origin_id": 412,
-            "origin_slot": 0,
-            "target_id": 413,
-            "target_slot": 3,
-            "type": "LATENT"
-          },
-          {
-            "id": 838,
-            "origin_id": 400,
-            "origin_slot": 0,
-            "target_id": 413,
-            "target_slot": 4,
-            "type": "IMAGE"
-          },
-          {
-            "id": 839,
-            "origin_id": 413,
-            "origin_slot": 0,
-            "target_id": 414,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 840,
-            "origin_id": 413,
-            "origin_slot": 1,
-            "target_id": 414,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 841,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 414,
-            "target_slot": 2,
-            "type": "VAE"
-          },
-          {
-            "id": 842,
-            "origin_id": 413,
-            "origin_slot": 2,
-            "target_id": 414,
-            "target_slot": 3,
-            "type": "LATENT"
-          },
-          {
-            "id": 843,
-            "origin_id": 400,
-            "origin_slot": 1,
-            "target_id": 414,
-            "target_slot": 4,
-            "type": "IMAGE"
-          },
-          {
-            "id": 844,
-            "origin_id": 414,
-            "origin_slot": 2,
-            "target_id": 415,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 845,
-            "origin_id": 410,
-            "origin_slot": 1,
-            "target_id": 415,
-            "target_slot": 1,
-            "type": "LATENT"
-          },
-          {
-            "id": 846,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 416,
-            "target_slot": 0,
-            "type": "MODEL"
-          },
-          {
-            "id": 847,
-            "origin_id": 414,
-            "origin_slot": 0,
-            "target_id": 416,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 848,
-            "origin_id": 414,
-            "origin_slot": 1,
-            "target_id": 416,
-            "target_slot": 2,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 849,
-            "origin_id": 416,
-            "origin_slot": 0,
-            "target_id": 419,
-            "target_slot": 1,
-            "type": "GUIDER"
-          },
-          {
-            "id": 850,
-            "origin_id": 417,
-            "origin_slot": 0,
-            "target_id": 419,
-            "target_slot": 2,
-            "type": "SAMPLER"
-          },
-          {
-            "id": 851,
-            "origin_id": 418,
-            "origin_slot": 0,
-            "target_id": 419,
-            "target_slot": 3,
-            "type": "SIGMAS"
-          },
-          {
-            "id": 852,
-            "origin_id": 415,
-            "origin_slot": 0,
-            "target_id": 419,
-            "target_slot": 4,
-            "type": "LATENT"
-          },
-          {
-            "id": 853,
-            "origin_id": -10,
-            "origin_slot": 12,
-            "target_id": 419,
-            "target_slot": 0,
-            "type": "NOISE"
-          },
-          {
-            "id": 854,
-            "origin_id": 419,
-            "origin_slot": 0,
-            "target_id": 420,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 855,
-            "origin_id": 414,
-            "origin_slot": 0,
-            "target_id": 421,
-            "target_slot": 0,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 856,
-            "origin_id": 414,
-            "origin_slot": 1,
-            "target_id": 421,
-            "target_slot": 1,
-            "type": "CONDITIONING"
-          },
-          {
-            "id": 857,
-            "origin_id": 420,
-            "origin_slot": 0,
-            "target_id": 421,
-            "target_slot": 2,
-            "type": "LATENT"
-          },
-          {
-            "id": 858,
-            "origin_id": 421,
-            "origin_slot": 2,
-            "target_id": 422,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 859,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 422,
-            "target_slot": 1,
-            "type": "VAE"
-          },
-          {
-            "id": 860,
-            "origin_id": 420,
-            "origin_slot": 1,
-            "target_id": 423,
-            "target_slot": 0,
-            "type": "LATENT"
-          },
-          {
-            "id": 861,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 423,
-            "target_slot": 1,
-            "type": "VAE"
-          },
-          {
-            "id": 862,
-            "origin_id": 422,
-            "origin_slot": 0,
-            "target_id": 424,
-            "target_slot": 1,
-            "type": "IMAGE"
-          },
-          {
-            "id": 863,
-            "origin_id": 423,
-            "origin_slot": 0,
-            "target_id": 424,
-            "target_slot": 3,
-            "type": "AUDIO"
-          },
-          {
-            "id": 864,
             "origin_id": 296,
             "origin_slot": 0,
-            "target_id": 424,
-            "target_slot": 4,
+            "target_id": 400,
+            "target_slot": 2,
             "type": "FLOAT"
           },
           {
-            "id": 865,
-            "origin_id": 424,
+            "id": 803,
+            "origin_id": 400,
             "origin_slot": 0,
             "target_id": 308,
             "target_slot": 0,
             "type": "IMAGE"
           },
           {
-            "id": 866,
-            "origin_id": 424,
+            "id": 804,
+            "origin_id": 400,
             "origin_slot": 1,
             "target_id": 308,
             "target_slot": 1,

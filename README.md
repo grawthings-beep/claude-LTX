@@ -15,13 +15,12 @@ the official distilled 384 LoRA at `0.5`, and the official LTX spatial x2
 upscaler. Its audio VAE, vocoder, and text projection are loaded from the same
 10Eros checkpoint, avoiding a redundant 27 GiB dev checkpoint download.
 
-`loop.json` is the natural-loop path. Its first pass keeps the normal two-stage
-I2V graph and generates 129 frames without forcing the input image onto the
-last frame. A second two-stage LTX pass generates a 49-frame motion bridge,
-conditioned on the first pass's final 9 frames and initial 9 frames. Both bridge
-stages crop their guide latents before decode. The assembler removes repeated
-guide contexts and returns 160 frames at 24 fps, while smoothing the generated
-audio at the internal join and loop boundary.
+`loop.json` is the natural-loop path. It runs the normal two-stage I2V graph for
+193 frames without any final-frame guide or return bridge. `Cyclic Loop Phase
+Cut` searches for the 152-frame window whose first and last 8-frame motion
+phases match best, then overlap-adds those short regions. The result is 144
+frames at 24 fps, exactly 6 seconds. Audio uses the same selected window and
+overlap, so video and sound stay synchronized.
 
 ## RunPod Image
 

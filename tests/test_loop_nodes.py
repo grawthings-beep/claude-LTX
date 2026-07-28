@@ -59,8 +59,7 @@ class LoopNodeTests(unittest.TestCase):
             {
                 "SetImageSize",
                 "LTXSetImageSize",
-                "LTXLoopBridgeFrames",
-                "LTXLoopAssemble",
+                "LTXLoopPhaseCut",
                 "LTXMobiusSampler",
                 "LTXLoopDecodeTiled",
                 "LTXLoopAudioSeam",
@@ -77,26 +76,16 @@ class LoopNodeTests(unittest.TestCase):
             self.nodes.LTXSetImageSize,
         )
 
-    def test_bridge_plan_keeps_six_second_cycle_without_duplicate_contexts(self):
-        self.assertEqual(
-            self.nodes.bridge_frame_plan(129, 49, 9),
-            (120, 40, 160),
-        )
+    def test_phase_cut_produces_exact_six_second_cycle(self):
+        self.assertEqual(self.nodes.phase_cut_output_frames(152, 8), 144)
 
-    def test_bridge_plan_rejects_invalid_contexts(self):
+    def test_phase_cut_rejects_invalid_blends(self):
         with self.assertRaises(ValueError):
-            self.nodes.bridge_frame_plan(129, 49, 8)
+            self.nodes.phase_cut_output_frames(15, 2)
         with self.assertRaises(ValueError):
-            self.nodes.bridge_frame_plan(9, 49, 9)
+            self.nodes.phase_cut_output_frames(152, 1)
         with self.assertRaises(ValueError):
-            self.nodes.bridge_frame_plan(129, 9, 9)
-
-    def test_audio_trim_matches_kept_video_duration(self):
-        waveform = types.SimpleNamespace(shape=(1, 2, 500000))
-        self.assertEqual(
-            self.nodes._audio_keep_samples(waveform, 120, 44100, 24),
-            220500,
-        )
+            self.nodes.phase_cut_output_frames(16, 8)
 
 
 if __name__ == "__main__":
