@@ -15,11 +15,13 @@ the official distilled 384 LoRA at `0.5`, and the official LTX spatial x2
 upscaler. Its audio VAE, vocoder, and text projection are loaded from the same
 10Eros checkpoint, avoiding a redundant 27 GiB dev checkpoint download.
 
-`loop.json` is the natural-loop path. It keeps the original two-stage graph and
-uses ComfyUI's built-in `LTXVAddGuide` at frames `0` and `-1` in both stages,
-with the same input image at strength `0.7`. This follows the official LTX
-FLF2V conditioning pattern instead of overwriting the final frame. A small
-bundled node smooths the generated audio boundary without changing its duration.
+`loop.json` is the natural-loop path. Its first pass keeps the normal two-stage
+I2V graph and generates 129 frames without forcing the input image onto the
+last frame. A second two-stage LTX pass generates a 49-frame motion bridge,
+conditioned on the first pass's final 9 frames and initial 9 frames. Both bridge
+stages crop their guide latents before decode. The assembler removes repeated
+guide contexts and returns 160 frames at 24 fps, while smoothing the generated
+audio at the internal join and loop boundary.
 
 ## RunPod Image
 

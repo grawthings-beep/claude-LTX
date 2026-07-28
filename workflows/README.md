@@ -13,9 +13,9 @@ and `1728x1152`.
 `i2v.json` keeps the same graph and model stack but disables the optional RIFE
 side-output branch. The main LTX output keeps its original audio timing.
 
-`loop.json` starts from the same intact graph as `i2v.json`. In both the low-
-and high-resolution sampling stages, the input image is passed to the built-in
-`LTXVAddGuide` node at frame `0` and frame `-1`, each at strength `0.7`. This is
-the FLF2V conditioning pattern used by the official ComfyUI LTX workflow, not a
-final-frame image overwrite. The audio boundary is smoothed without changing
-duration. The workflow uses `161` frames to follow LTX's `8n+1` layout.
+`loop.json` uses a two-pass bridge design. Pass 1 is the intact two-stage I2V
+path and generates 129 frames without a forced final still. Pass 2 extracts the
+tail and head 9-frame motion contexts, then generates a 49-frame LTX bridge in
+two stages. `LTXVCropGuides` runs after both bridge sampling stages so guide
+latents never appear as output frames. Removing the repeated contexts produces
+160 frames at 24 fps. The generated audio is joined with boundary smoothing.
