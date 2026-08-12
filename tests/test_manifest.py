@@ -31,7 +31,6 @@ class ManifestTests(unittest.TestCase):
             "models/loras/LTX23/LTX-2-Image2Vid-Adapter.safetensors",
             "models/loras/civitai/ltx23_phut_hon_civitai_2806861.safetensors",
             "models/loras/civitai/smoothmix_animations_ltx_civitai_2911845.safetensors",
-            "models/loras/civitai/civitai_2849892.safetensors",
             "models/loras/ltx23/LTX2.3_reasoning_I2V_V3.safetensors",
             "models/loras/ltx23/ltx23_edit_anything_global_rank128_v1_9000steps_adamw.safetensors",
             "models/loras/ltx23/LTX-2.3jiggle.safetensors",
@@ -39,6 +38,20 @@ class ManifestTests(unittest.TestCase):
             "models/loras/ltx23/throat_bulge-10Eros_i2v_v1.0.safetensors",
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
+
+    def test_blowjob_lora_uses_exact_civitai_file_and_workflow_path(self):
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        entries = [
+            entry for entry in manifest["models"]
+            if "fileId=2736052" in entry["url"]
+        ]
+
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["priority"], 0)
+        self.assertEqual(
+            entries[0]["path"],
+            "models/loras/ltx23/LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
+        )
 
     def test_workflow_models_download_before_optional_models(self):
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))

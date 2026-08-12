@@ -134,8 +134,9 @@
       "path": "models/loras/civitai/smoothmix_animations_ltx_civitai_2911845.safetensors"
     },
     {
-      "name": "Civitai LTX LoRA 2849892",
+      "name": "LTX 2.3 Blowjob Animation I2V v1.0 LoRA (Civitai)",
       "enabled": true,
+      "priority": 0,
       "required": false,
       "requires_env": [
         "CIVITAI_TOKEN"
@@ -143,8 +144,8 @@
       "method": "curl",
       "use_aria2": false,
       "min_bytes": 1048576,
-      "url": "https://civitai.com/api/download/models/2849892?type=Model&format=SafeTensor&token=${CIVITAI_TOKEN}",
-      "path": "models/loras/civitai/civitai_2849892.safetensors"
+      "url": "https://civitai.red/api/download/models/2849892?fileId=2736052&token=${CIVITAI_TOKEN}",
+      "path": "models/loras/ltx23/LTX2.3_blowjob_animation_I2V_v1.0.safetensors"
     },
     {
       "name": "Reasoning I2V V3 LoRA (uwgm)",
