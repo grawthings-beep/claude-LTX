@@ -1,26 +1,15 @@
 # claude-LTX
 
-RunPod ComfyUI template for LTX I2V workflows.
+RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
-The bundled workflow set is intentionally small:
+Only one workflow is bundled:
 
-- `original.json`
 - `i2v.json`
-- `loop.json`
 
-`original.json` preserves the uploaded reference graph, including its optional
-AnimeSharp and RIFE branch. `i2v.json` keeps that graph but disables the slow
-RIFE side output. Both use the normal `1728x1152` I2V path, the 10Eros checkpoint,
-the official distilled 384 LoRA at `0.5`, and the official LTX spatial x2
-upscaler. Its audio VAE, vocoder, and text projection are loaded from the same
-10Eros checkpoint, avoiding a redundant 27 GiB dev checkpoint download.
-
-`loop.json` is the natural-loop path. It runs the normal two-stage I2V graph for
-193 frames without any final-frame guide or return bridge. `Cyclic Loop Phase
-Cut` searches for the 152-frame window whose first and last 8-frame motion
-phases match best, then overlap-adds those short regions. The result is 144
-frames at 24 fps, exactly 6 seconds. Audio uses the same selected window and
-overlap, so video and sound stay synchronized.
+`i2v.json` is the unmodified workflow from
+`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`. It includes the checkpoint/distilled
+model switch, two-stage I2V path, audio path, optional editor, RIFE interpolation,
+and optional RTX video super resolution.
 
 ## RunPod Image
 
@@ -32,7 +21,7 @@ Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
 The image uses a pinned CUDA 13.0 RunPod base with PyTorch cu130 for RTX 5090
-support and bundles only the external node pack used by the workflows. At
+support and bundles the external node packs required by the workflow. At
 startup it repairs missing NVIDIA UVM device nodes when the container permits
 it, then performs a low-level CUDA driver probe. ComfyUI starts immediately
 while model downloads continue in the background. The `cuda12.8` tag remains
@@ -44,13 +33,13 @@ Models are downloaded into `/workspace/comfyui/models`, so a RunPod persistent
 volume or Network Volume will reuse them across Pod restarts. A Network Volume
 mounted at `/workspace` is required to preserve this cache when replacing a Pod.
 
-Models referenced by the bundled workflows have download priority. Other LoRAs
+Models referenced by the bundled workflow have download priority. Other LoRAs
 remain in the manifest and download afterward. Fresh Hugging Face Xet downloads
 whose content hash matches the manifest are not read in full a second time.
 
-HF-hosted LoRAs used by the bundled workflows are downloaded automatically when
-`HF_TOKEN` is set. Existing Civitai LoRAs are still kept as optional entries and
-are skipped unless `CIVITAI_TOKEN` is provided.
+The requested Civitai LoRA (`fileId=2736052`) is the first manifest entry and is
+downloaded when `CIVITAI_TOKEN` is set. Its Hugging Face backup and all existing
+LoRA entries remain in the manifest.
 
 Useful logs:
 

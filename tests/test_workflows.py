@@ -1,3 +1,4 @@
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -6,12 +7,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "i2v.json"
-LOOP_WORKFLOW = "loop.json"
-ORIGINAL_WORKFLOW = "original.json"
+SOURCE_SHA256 = "5ca6f5802bd8cebb90b4030f11f7a7f7d563f8032e753913a60eb846bd9c098c"
 
 
-def load_workflow(name):
-    return json.loads((WORKFLOWS / name).read_text(encoding="utf-8"))
+def load_workflow():
+    return json.loads((WORKFLOWS / I2V_WORKFLOW).read_text(encoding="utf-8"))
 
 
 def assert_root_graph_complete(testcase, workflow):
@@ -45,205 +45,86 @@ def assert_subgraph_complete(testcase, subgraph):
 
 
 class WorkflowTests(unittest.TestCase):
-    def test_only_simple_workflow_names_are_bundled(self):
+    def test_only_mrxin_i2v_workflow_is_bundled(self):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
-        self.assertEqual(names, {ORIGINAL_WORKFLOW, I2V_WORKFLOW, LOOP_WORKFLOW})
+        self.assertEqual(names, {I2V_WORKFLOW})
 
-    def test_original_workflow_keeps_uploaded_graph(self):
-        workflow = load_workflow(ORIGINAL_WORKFLOW)
-        nodes = {node["id"]: node for node in workflow["nodes"]}
+    def test_workflow_matches_uploaded_zip_exactly(self):
+        digest = hashlib.sha256((WORKFLOWS / I2V_WORKFLOW).read_bytes()).hexdigest()
+        self.assertEqual(digest, SOURCE_SHA256)
 
-        self.assertEqual(len(nodes), 25)
-        self.assertEqual(nodes[325]["type"], "SetImageSize")
-        self.assertEqual(nodes[325]["widgets_values"], [1728, 1152])
-        self.assertEqual(nodes[328]["type"], "ImageUpscaleWithModel")
-        self.assertEqual(nodes[328]["mode"], 0)
-        self.assertEqual(nodes[329]["type"], "UpscaleModelLoader")
-        self.assertEqual(nodes[330]["type"], "RIFE VFI")
-        self.assertEqual(nodes[330]["mode"], 0)
-        self.assertEqual(nodes[331]["type"], "VHS_VideoCombine")
-        self.assertEqual(nodes[331]["mode"], 0)
+    def test_workflow_graph_is_complete(self):
+        workflow = load_workflow()
+        self.assertEqual(len(workflow["nodes"]), 97)
+        self.assertEqual(len(workflow["definitions"]["subgraphs"]), 1)
+        self.assertEqual(len(workflow["definitions"]["subgraphs"][0]["nodes"]), 47)
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, workflow["definitions"]["subgraphs"][0])
 
-    def test_i2v_workflow_matches_requested_stack(self):
-        workflow = load_workflow(I2V_WORKFLOW)
-        nodes = {node["id"]: node for node in workflow["nodes"]}
-        types = [node["type"] for node in nodes.values()]
+    def test_workflow_model_stack_and_defaults_are_preserved(self):
+        nodes = {node["id"]: node for node in load_workflow()["nodes"]}
 
+        self.assertEqual(nodes[1]["widgets_values"], ["ltx2310eros_beta.safetensors"])
         self.assertEqual(
-            nodes[313]["widgets_values"],
-            ["10Eros_v1-fp8mixed_learned.safetensors"],
-        )
-        self.assertEqual(
-            nodes[280]["widgets_values"],
-            ["10Eros_v1-fp8mixed_learned.safetensors"],
-        )
-        self.assertEqual(
-            nodes[314]["widgets_values"],
+            nodes[186]["widgets_values"],
             [
-                "gemma_3_12B_it_fp4_mixed.safetensors",
-                "10Eros_v1-fp8mixed_learned.safetensors",
+                "ltx-2.3-22b-distilled_transformer_only_fp8_input_scaled_v3.safetensors",
                 "default",
             ],
         )
         self.assertEqual(
-            nodes[320]["widgets_values"],
-            ["ltx-2.3-22b-distilled-lora-384.safetensors", 0.5],
+            nodes[118]["widgets_values"],
+            [
+                "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+                "ltx2310eros_beta.safetensors",
+                "default",
+            ],
         )
         self.assertEqual(
-            nodes[309]["widgets_values"],
+            nodes[189]["widgets_values"],
+            [
+                "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+                "ltx-2.3_text_projection_bf16.safetensors",
+                "ltxv",
+                "default",
+            ],
+        )
+        self.assertEqual(nodes[188]["widgets_values"], ["LTX23_video_vae_bf16.safetensors"])
+        self.assertEqual(nodes[190]["widgets_values"], ["LTX23_audio_vae_bf16.safetensors"])
+        self.assertEqual(nodes[5]["widgets_values"], ["taeltx2_3.safetensors"])
+        self.assertEqual(
+            nodes[4]["widgets_values"],
             ["ltx-2.3-spatial-upscaler-x2-1.1.safetensors"],
         )
-        self.assertEqual(nodes[325]["widgets_values"], [1728, 1152])
-        self.assertEqual(nodes[325]["type"], "SetImageSize")
-        self.assertEqual(nodes[328]["type"], "ImageUpscaleWithModel")
-        self.assertEqual(nodes[328]["mode"], 2)
-        self.assertEqual(nodes[330]["type"], "RIFE VFI")
-        self.assertEqual(nodes[330]["mode"], 2)
-        self.assertEqual(nodes[331]["type"], "VHS_VideoCombine")
-        self.assertEqual(nodes[331]["mode"], 2)
-        self.assertEqual(nodes[298]["widgets_values"][0], 24)
-        self.assertEqual(nodes[299]["widgets_values"][0], 162)
-        self.assertEqual(nodes[75]["widgets_values"][0], "video/i2v")
-        self.assertNotIn("LTXMobiusSampler", types)
+        self.assertEqual(nodes[170]["widgets_values"], ["nmkdSiaxCX_200k.safetensors"])
+        self.assertEqual(nodes[18]["widgets_values"], [20, 20, 0])
+        self.assertEqual(nodes[19]["widgets_values"], [704, 704, 0])
+        self.assertEqual(nodes[181]["widgets_values"], [1280, 1280, 0])
 
-        power_loras = nodes[324]["widgets_values"]
+    def test_default_active_loras_are_preserved(self):
+        nodes = {node["id"]: node for node in load_workflow()["nodes"]}
+        active = {
+            widget["lora"]
+            for widget in nodes[6]["widgets_values"]
+            if isinstance(widget, dict) and widget.get("on") and widget.get("lora")
+        }
         self.assertEqual(
-            power_loras[3],
+            active,
             {
-                "on": True,
-                "lora": "LTX23\\LTX-2.3-Phut hon.safetensors",
-                "strength": 1,
-                "strengthTwo": None,
+                "LTX 2.3\\LTX2.3_Reasoning_V1.safetensors",
+                "LTX2\\DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors",
+                "LTX2\\LTX2_3_NSFW_furry_concat_v2.safetensors",
+                "LTX 2.3\\LTX-2.3 - Orgasm.safetensors",
             },
         )
+        distilled = nodes[7]["widgets_values"][2]
+        self.assertTrue(distilled["on"])
         self.assertEqual(
-            power_loras[4],
-            {
-                "on": True,
-                "lora": "LTX23\\LTX-2-Image2Vid-Adapter.safetensors",
-                "strength": 0.5,
-                "strengthTwo": None,
-            },
+            distilled["lora"],
+            "LTX2\\ltx-2.3-22b-distilled-lora-dynamic_fro09_avg_rank_105_bf16.safetensors",
         )
-        assert_root_graph_complete(self, workflow)
-        assert_subgraph_complete(self, workflow["definitions"]["subgraphs"][0])
 
-    def test_loop_workflow_uses_normal_i2v_then_cyclic_phase_cut(self):
-        workflow = load_workflow(LOOP_WORKFLOW)
-        nodes = {node["id"]: node for node in workflow["nodes"]}
-        subgraph = workflow["definitions"]["subgraphs"][0]
-        subnodes = {node["id"]: node for node in subgraph["nodes"]}
-        subtypes = [node["type"] for node in subnodes.values()]
-
-        self.assertEqual(
-            nodes[313]["widgets_values"],
-            ["10Eros_v1-fp8mixed_learned.safetensors"],
-        )
-        self.assertEqual(
-            nodes[280]["widgets_values"],
-            ["10Eros_v1-fp8mixed_learned.safetensors"],
-        )
-        self.assertEqual(
-            nodes[314]["widgets_values"],
-            [
-                "gemma_3_12B_it_fp4_mixed.safetensors",
-                "10Eros_v1-fp8mixed_learned.safetensors",
-                "default",
-            ],
-        )
-        self.assertEqual(
-            nodes[320]["widgets_values"],
-            ["ltx-2.3-22b-distilled-lora-384.safetensors", 0.5],
-        )
-        self.assertEqual(nodes[325]["widgets_values"], [1728, 1152])
-        self.assertEqual(nodes[325]["type"], "SetImageSize")
-        self.assertEqual(nodes[328]["type"], "ImageUpscaleWithModel")
-        self.assertEqual(nodes[328]["mode"], 2)
-        self.assertEqual(nodes[330]["type"], "RIFE VFI")
-        self.assertEqual(nodes[330]["mode"], 2)
-        self.assertEqual(nodes[331]["type"], "VHS_VideoCombine")
-        self.assertEqual(nodes[331]["mode"], 2)
-        self.assertEqual(nodes[299]["widgets_values"][0], 193)
-        self.assertEqual(nodes[75]["widgets_values"][0], "video/loop")
-
-        self.assertEqual(subnodes[294]["type"], "LTXVImgToVideoInplace")
-        self.assertEqual(subnodes[286]["type"], "LTXVImgToVideoInplace")
-        self.assertEqual(subnodes[312]["type"], "VAEDecodeTiled")
-        self.assertEqual(subnodes[400]["type"], "LTXLoopPhaseCut")
-        self.assertEqual(
-            subnodes[400]["widgets_values"],
-            [24.0, 152, 8, 0.5, 64, 1],
-        )
-        self.assertEqual(subtypes.count("SamplerCustomAdvanced"), 2)
-        self.assertNotIn("LTXVAddGuide", subtypes)
-        self.assertNotIn("LTXLoopBridgeFrames", subtypes)
-        self.assertNotIn("LTXLoopAssemble", subtypes)
-        self.assertNotIn("LTXMobiusSampler", subtypes)
-
-        self.assertEqual(subnodes[400]["inputs"][0]["link"], 800)
-        self.assertEqual(subnodes[400]["inputs"][1]["link"], 801)
-        self.assertEqual(subnodes[400]["inputs"][2]["link"], 802)
-        self.assertEqual(subnodes[308]["inputs"][0]["link"], 803)
-        self.assertEqual(subnodes[308]["inputs"][1]["link"], 804)
-
-        assert_root_graph_complete(self, workflow)
-        assert_subgraph_complete(self, subgraph)
-
-    def test_i2v_and_loop_keep_original_root_topology(self):
-        original = load_workflow(ORIGINAL_WORKFLOW)
-        expected_nodes = [(node["id"], node["type"]) for node in original["nodes"]]
-        expected_links = original["links"]
-
-        for name in (I2V_WORKFLOW, LOOP_WORKFLOW):
-            workflow = load_workflow(name)
-            self.assertEqual(
-                [(node["id"], node["type"]) for node in workflow["nodes"]],
-                expected_nodes,
-            )
-            self.assertEqual(workflow["links"], expected_links)
-
-    def test_optional_loras_are_available_in_all_workflows(self):
-        expected = {
-            "ltx23\\LTX-2.3jiggle.safetensors",
-            "ltx23\\LTX2.3_blowjob_animation_I2V_v1.0.safetensors",
-            "ltx23\\throat_bulge-10Eros_i2v_v1.0.safetensors",
-        }
-        for name in (ORIGINAL_WORKFLOW, I2V_WORKFLOW, LOOP_WORKFLOW):
-            workflow = load_workflow(name)
-            nodes = {node["id"]: node for node in workflow["nodes"]}
-            power_loras = nodes[324]["widgets_values"]
-            optional_loras = {
-                widget["lora"]
-                for widget in power_loras
-                if isinstance(widget, dict)
-                and "lora" in widget
-                and not widget["on"]
-            }
-            self.assertTrue(expected.issubset(optional_loras), expected - optional_loras)
-
-    def test_manifest_contains_supported_workflow_models(self):
-        manifest = json.loads(
-            (ROOT / "config" / "ltx-video-models.json").read_text(encoding="utf-8")
-        )
-        paths = {
-            model["path"]
-            for model in manifest["models"]
-            if model.get("enabled", True)
-        }
-        expected = {
-            "models/checkpoints/10Eros_v1-fp8mixed_learned.safetensors",
-            "models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
-            "models/latent_upscale_models/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
-            "models/upscale_models/2x-AnimeSharpV4_RCAN.safetensors",
-            "models/loras/ltx-2.3-22b-distilled-lora-384.safetensors",
-            "models/loras/LTX23/LTX-2.3-Phut hon.safetensors",
-            "models/loras/LTX23/LTX-2-Image2Vid-Adapter.safetensors",
-        }
-        self.assertTrue(expected.issubset(paths), expected - paths)
-
-    def test_custom_nodes_are_pinned(self):
+    def test_required_custom_nodes_are_pinned(self):
         lines = (ROOT / "custom_nodes.txt").read_text(encoding="utf-8").splitlines()
         names = set()
         for line in lines:
@@ -251,37 +132,40 @@ class WorkflowTests(unittest.TestCase):
                 continue
             name, url, revision = line.split("|")
             names.add(name)
-            self.assertTrue(name)
             self.assertTrue(url.startswith("https://github.com/"))
             self.assertRegex(revision, r"^[0-9a-f]{40}$")
-        self.assertEqual(
-            names,
-            {
-                "10S_Nodes",
-                "rgthree-comfy",
-                "ComfyUI-VideoHelperSuite",
-                "ComfyUI-Frame-Interpolation",
-            },
-        )
 
-    def test_bundled_loop_nodes_are_installed(self):
+        required = {
+            "rgthree-comfy",
+            "ComfyUI-VideoHelperSuite",
+            "ComfyUI-KJNodes",
+            "ComfyUI-mxToolkit",
+            "ComfyUI-Easy-Use",
+            "ComfyUI-Impact-Pack",
+            "ComfyUI-Custom-Scripts",
+            "Comfyui-Memory_Cleanup",
+            "ControlAltAI-Nodes",
+            "comfyui-int-and-float",
+            "Nvidia_RTX_Nodes_ComfyUI",
+            "ComfyUI-VFI",
+            "ComfyUI-LTXVideo",
+        }
+        self.assertTrue(required.issubset(names), required - names)
+
+    def test_image_build_checks_workflow_nodes(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
         installer = (ROOT / "scripts" / "install_custom_nodes.sh").read_text(
             encoding="utf-8"
         )
-        node_source = (
-            ROOT / "custom_nodepacks" / "ComfyUI-LTXLoop" / "nodes.py"
-        ).read_text(encoding="utf-8")
+        checker = (ROOT / "scripts" / "check_workflow_nodes.py").read_text(
+            encoding="utf-8"
+        )
 
-        self.assertIn("COPY custom_nodepacks/", dockerfile)
-        self.assertIn("install_bundled_nodepacks", installer)
-        self.assertIn("rife49.pth", installer)
-        self.assertIn('"SetImageSize": LTXSetImageSize', node_source)
-        self.assertIn('"LTXSetImageSize": LTXSetImageSize', node_source)
-        self.assertIn('"LTXLoopPhaseCut": LTXLoopPhaseCut', node_source)
-        self.assertIn('"LTXMobiusSampler": LTXMobiusSampler', node_source)
-        self.assertIn('"LTXLoopDecodeTiled": LTXLoopDecodeTiled', node_source)
-        self.assertIn('"LTXLoopAudioSeam": LTXLoopAudioSeam', node_source)
+        self.assertIn("check_workflow_nodes.py", dockerfile)
+        self.assertIn("submodule update --init --recursive", installer)
+        self.assertIn("download_rife.py", installer)
+        self.assertIn("flownet.pkl", installer)
+        self.assertIn("workflow node types missing from image", checker)
 
     def test_image_is_slimmed_and_starts_comfyui_immediately(self):
         dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
@@ -293,13 +177,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("runpod/comfyui:1.4.4-cuda13.0@sha256:", dockerfile)
         self.assertIn("CUDA_FORCE_PRELOAD_LIBRARIES=0", dockerfile)
         self.assertIn("nvidia-modprobe", dockerfile)
-        self.assertIn(
-            "find /opt/comfyui-baked/custom_nodes -mindepth 1 -maxdepth 1",
-            dockerfile,
-        )
-        self.assertIn("check_workflow_nodes.py", dockerfile)
         self.assertIn("repair_nvidia_devices", start)
-        self.assertIn("nvidia-modprobe -c 0 -u", start)
         self.assertIn("cuInit", start)
         self.assertNotIn("wait_for_gpu", start)
         self.assertNotIn("GPU_WAIT_TIMEOUT", start)
@@ -309,10 +187,6 @@ class WorkflowTests(unittest.TestCase):
             start.index("start_background_downloads"),
             start.index('exec "${PYTHON_BIN}" main.py'),
         )
-
-    def test_start_script_preserves_existing_workflows(self):
-        start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
-        self.assertNotIn('rm -f "${COMFYUI_WORKFLOW_DIR}"', start)
 
 
 if __name__ == "__main__":

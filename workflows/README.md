@@ -1,21 +1,15 @@
-# Workflows
+# Workflow
 
-Bundled workflows:
+Bundled workflow:
 
-- `original.json`
 - `i2v.json`
-- `loop.json`
 
-`original.json` preserves the uploaded reference graph, including its AnimeSharp
-and RIFE side-output branch. Its requested model and output settings are 10Eros
-and `1728x1152`.
+This is the unmodified `MrXin LTX 2.3 I2V EROS V4` workflow imported from
+`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`. It includes the 10Eros checkpoint and
+distilled-model switch, two-stage LTX I2V generation, audio, latent upscaling,
+an optional video editor, RIFE interpolation, and optional RTX video super
+resolution.
 
-`i2v.json` keeps the same graph and model stack but disables the optional RIFE
-side-output branch. The main LTX output keeps its original audio timing.
-
-`loop.json` keeps the intact two-stage I2V path and generates 193 unconstrained
-frames. It does not add a final-frame guide or generate a return bridge.
-`Cyclic Loop Phase Cut` compares the appearance and temporal velocity of each
-candidate 152-frame window, selects the best phase, and overlap-adds only its
-first and last 8 frames. The output is 144 frames at 24 fps, exactly 6 seconds.
-Audio is cut and overlapped at the same phase.
+The manifest downloads every model selected by the workflow's default active
+path. Models used only by disabled LoRA slots remain user-selectable when they
+are already present or added later.

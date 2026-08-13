@@ -37,6 +37,10 @@ while IFS='|' read -r name url ref; do
     git -C "${target}" checkout -q --detach FETCH_HEAD
   fi
 
+  if [[ -f "${target}/.gitmodules" ]]; then
+    git -C "${target}" submodule update --init --recursive --depth 1
+  fi
+
   if [[ -f "${target}/requirements.txt" ]]; then
     echo "Installing Python requirements for ${name}"
     "${PYTHON_BIN}" -m pip install -r "${target}/requirements.txt"
@@ -47,7 +51,8 @@ while IFS='|' read -r name url ref; do
     "${PYTHON_BIN}" -m pip install -e "${target}" || true
   fi
 
-  rm -rf "${target}/.git" "${target}/.github" "${target}/tests"
+  find "${target}" -name .git -prune -exec rm -rf {} +
+  rm -rf "${target}/.github" "${target}/tests"
   find "${target}" -type d -name __pycache__ -prune -exec rm -rf {} +
 done < /opt/claude-ltx/custom_nodes.txt
 
@@ -81,6 +86,21 @@ temporary.replace(target)
 PY
 }
 
+install_vfi_assets() {
+  local target="${CUSTOM_NODES_DIR}/ComfyUI-VFI"
+  local rife_dir="${target}/rife/train_log"
+  local rife_model="${rife_dir}/flownet.pkl"
+  [[ -d "${target}" ]] || return 0
+  [[ -s "${rife_model}" ]] && return 0
+
+  echo "Installing ComfyUI-VFI checkpoint flownet.pkl"
+  "${PYTHON_BIN}" "${target}/rife/download_rife.py" "${rife_dir}"
+  [[ -s "${rife_model}" ]] || {
+    echo "ERROR: ComfyUI-VFI checkpoint was not installed." >&2
+    return 1
+  }
+}
+
 install_bundled_nodepacks() {
   local source
   local target
@@ -94,4 +114,5 @@ install_bundled_nodepacks() {
 }
 
 install_frame_interpolation_assets
+install_vfi_assets
 install_bundled_nodepacks
