@@ -165,6 +165,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("submodule update --init --recursive", installer)
         self.assertIn("download_rife.py", installer)
         self.assertIn("flownet.pkl", installer)
+        self.assertIn('"Fast Groups Bypasser (rgthree)"', checker)
+        self.assertIn('"easy getNode"', checker)
+        self.assertIn('"easy setNode"', checker)
+        self.assertIn("stub_gpu_only_imports", checker)
         self.assertIn("workflow node types missing from image", checker)
 
     def test_image_is_slimmed_and_starts_comfyui_immediately(self):

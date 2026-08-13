@@ -5,9 +5,24 @@ import json
 import os
 import pathlib
 import sys
+import types
 
 
-FRONTEND_NODE_TYPES = {"MarkdownNote", "Note"}
+FRONTEND_NODE_TYPES = {
+    "Fast Groups Bypasser (rgthree)",
+    "MarkdownNote",
+    "Note",
+    "easy getNode",
+    "easy setNode",
+}
+
+
+def stub_gpu_only_imports():
+    try:
+        import nvvfx  # noqa: F401
+    except ImportError:
+        # Docker builds have no NVIDIA driver. Runtime imports the real module.
+        sys.modules["nvvfx"] = types.ModuleType("nvvfx")
 
 
 def workflow_node_types(path):
@@ -35,6 +50,7 @@ def main():
     import comfy.options
 
     comfy.options.enable_args_parsing()
+    stub_gpu_only_imports()
     import utils.install_util
     import server
     import nodes
