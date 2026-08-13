@@ -6,10 +6,16 @@ Only one workflow is bundled:
 
 - `mrxin-i2v.json`
 
-`mrxin-i2v.json` is the unmodified workflow from
+`mrxin-i2v.json` is adapted from
 `mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`. It includes the checkpoint/distilled
 model switch, two-stage I2V path, audio path, optional editor, RIFE interpolation,
 and optional RTX video super resolution.
+
+The RunPod defaults keep the 10Eros model, CLIP, video VAE, and audio VAE on
+the same checkpoint branch. Optional content LoRAs remain configured but start
+disabled. The active distilled LoRA is TenStrip's I2V-safe `condsafe` variant.
+The standalone audio VAE is stored under `models/checkpoints`, which is the
+directory read by ComfyUI's `LTXVAudioVAELoader`.
 
 ## RunPod Image
 

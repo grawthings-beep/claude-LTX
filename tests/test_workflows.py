@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
-SOURCE_SHA256 = "5ca6f5802bd8cebb90b4030f11f7a7f7d563f8032e753913a60eb846bd9c098c"
+WORKFLOW_SHA256 = "80445825a2dfba41a02a0973ea3f5cf1cd1fb4b35114b2c9ee2701b8b0de8183"
 
 
 def load_workflow():
@@ -49,9 +49,9 @@ class WorkflowTests(unittest.TestCase):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
         self.assertEqual(names, {I2V_WORKFLOW})
 
-    def test_workflow_matches_uploaded_zip_exactly(self):
+    def test_runpod_adapted_workflow_is_locked(self):
         digest = hashlib.sha256((WORKFLOWS / I2V_WORKFLOW).read_bytes()).hexdigest()
-        self.assertEqual(digest, SOURCE_SHA256)
+        self.assertEqual(digest, WORKFLOW_SHA256)
 
     def test_workflow_graph_is_complete(self):
         workflow = load_workflow()
@@ -100,29 +100,34 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(nodes[18]["widgets_values"], [20, 20, 0])
         self.assertEqual(nodes[19]["widgets_values"], [704, 704, 0])
         self.assertEqual(nodes[181]["widgets_values"], [1280, 1280, 0])
+        self.assertTrue(
+            all(nodes[node_id]["widgets_values"] == [1] for node_id in (191, 192, 193, 194))
+        )
 
-    def test_default_active_loras_are_preserved(self):
+    def test_default_lora_stack_is_stable(self):
         nodes = {node["id"]: node for node in load_workflow()["nodes"]}
         active = {
             widget["lora"]
             for widget in nodes[6]["widgets_values"]
             if isinstance(widget, dict) and widget.get("on") and widget.get("lora")
         }
-        self.assertEqual(
-            active,
-            {
-                "LTX 2.3\\LTX2.3_Reasoning_V1.safetensors",
-                "LTX2\\DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors",
-                "LTX2\\LTX2_3_NSFW_furry_concat_v2.safetensors",
-                "LTX 2.3\\LTX-2.3 - Orgasm.safetensors",
-            },
-        )
+        self.assertEqual(active, set())
+        configured = {
+            widget["lora"]
+            for widget in nodes[6]["widgets_values"]
+            if isinstance(widget, dict) and widget.get("lora")
+        }
+        self.assertIn("LTX 2.3\\LTX2.3_Reasoning_V1.safetensors", configured)
+        self.assertIn("LTX2\\DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors", configured)
+        self.assertIn("LTX2\\LTX2_3_NSFW_furry_concat_v2.safetensors", configured)
+        self.assertIn("LTX 2.3\\LTX-2.3 - Orgasm.safetensors", configured)
         distilled = nodes[7]["widgets_values"][2]
         self.assertTrue(distilled["on"])
         self.assertEqual(
             distilled["lora"],
-            "LTX2\\ltx-2.3-22b-distilled-lora-dynamic_fro09_avg_rank_105_bf16.safetensors",
+            "ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
         )
+        self.assertEqual(distilled["strength"], 0.6)
 
     def test_required_custom_nodes_are_pinned(self):
         lines = (ROOT / "custom_nodes.txt").read_text(encoding="utf-8").splitlines()
