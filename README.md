@@ -4,9 +4,9 @@ RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
 Only one workflow is bundled:
 
-- `i2v.json`
+- `mrxin-i2v.json`
 
-`i2v.json` is the unmodified workflow from
+`mrxin-i2v.json` is the unmodified workflow from
 `mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`. It includes the checkpoint/distilled
 model switch, two-stage I2V path, audio path, optional editor, RIFE interpolation,
 and optional RTX video super resolution.
@@ -17,13 +17,20 @@ and optional RTX video super resolution.
 ghcr.io/grawthings-beep/claude-ltx:cuda13.0
 ```
 
+Each build also publishes an immutable image tag using the full Git commit SHA.
+Use that tag for RunPod deployments when a worker may have cached a mutable tag.
+The startup log prints `claude-LTX image revision` so the running image can be
+matched to the requested tag.
+
 Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
 The image uses a pinned CUDA 13.0 RunPod base with PyTorch cu130 for RTX 5090
 support and bundles the external node packs required by the workflow. At
 startup it repairs missing NVIDIA UVM device nodes when the container permits
-it, then performs a low-level CUDA driver probe. ComfyUI starts immediately
+it, removes the retired bundled `i2v.json`, `original.json`, and `loop.json`
+files, installs `mrxin-i2v.json`, then performs a low-level CUDA driver probe.
+ComfyUI starts immediately
 while model downloads continue in the background. The `cuda12.8` tag remains
 as a compatibility alias for existing templates.
 

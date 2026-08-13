@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
-I2V_WORKFLOW = "i2v.json"
+I2V_WORKFLOW = "mrxin-i2v.json"
 SOURCE_SHA256 = "5ca6f5802bd8cebb90b4030f11f7a7f7d563f8032e753913a60eb846bd9c098c"
 
 
@@ -183,10 +183,15 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("nvidia-modprobe", dockerfile)
         self.assertIn("repair_nvidia_devices", start)
         self.assertIn("cuInit", start)
+        self.assertIn("claude-LTX image revision", start)
+        self.assertIn("i2v.json original.json loop.json", start)
+        self.assertIn("CLAUDE_LTX_REVISION", dockerfile)
         self.assertNotIn("wait_for_gpu", start)
         self.assertNotIn("GPU_WAIT_TIMEOUT", start)
         self.assertIn("claude-ltx:cuda13.0", build)
         self.assertIn("claude-ltx:cuda12.8", build)
+        self.assertIn("claude-ltx:${{ github.sha }}", build)
+        self.assertIn("BUILD_REVISION=${{ github.sha }}", build)
         self.assertLess(
             start.index("start_background_downloads"),
             start.index('exec "${PYTHON_BIN}" main.py'),

@@ -69,19 +69,10 @@ MODEL_DOWNLOAD_MODE=blocking
 
 ## 5. Workflow choice
 
-Use the normal `1728x1152` I2V workflow:
+Use the bundled MrXin I2V workflow:
 
 ```text
-i2v.json
+mrxin-i2v.json
 ```
 
 Replace the `LoadImage` image with your own source image.
-
-Use the experimental natural-loop workflow separately:
-
-```text
-loop.json
-```
-
-The loop workflow uses the bundled LTX Mobius sampler, cyclic VAE decode, and
-audio seam correction. It is independent from the normal I2V workflow.

@@ -1,13 +1,18 @@
 ARG BASE_IMAGE=runpod/comfyui:1.4.4-cuda13.0@sha256:949b0688db0692b97b9aab9efd1c8f5afe94cfaa32c32008f31bcafcff63baf1
 FROM ${BASE_IMAGE}
 
+ARG BUILD_REVISION=unknown
+
+LABEL org.opencontainers.image.revision="${BUILD_REVISION}"
+
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONUNBUFFERED=1 \
     HF_XET_HIGH_PERFORMANCE=1 \
     HF_HUB_DOWNLOAD_TIMEOUT=120 \
-    CUDA_FORCE_PRELOAD_LIBRARIES=0
+    CUDA_FORCE_PRELOAD_LIBRARIES=0 \
+    CLAUDE_LTX_REVISION="${BUILD_REVISION}"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

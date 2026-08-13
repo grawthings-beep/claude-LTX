@@ -27,6 +27,8 @@ MODEL_DOWNLOAD_LOCK="${MODEL_DOWNLOAD_LOCK:-${MODEL_DOWNLOAD_LOG_DIR}/model-down
 PORT="${PORT:-8188}"
 LISTEN="${LISTEN:-0.0.0.0}"
 
+echo "claude-LTX image revision: ${CLAUDE_LTX_REVISION:-unknown}"
+
 mkdir -p "${WORKSPACE_DIR}/input" \
          "${WORKSPACE_DIR}/output" \
          "${WORKSPACE_DIR}/exports" \
@@ -124,10 +126,17 @@ prepare_cuda() {
 prepare_cuda
 
 install_bundled_workflows() {
+  local legacy_workflow
   local workflow
+
+  for legacy_workflow in i2v.json original.json loop.json; do
+    rm -f -- "${COMFYUI_WORKFLOW_DIR}/${legacy_workflow}"
+  done
+
   for workflow in /opt/claude-ltx/workflows/*.json; do
     [[ -e "${workflow}" ]] || continue
     install -m 0644 "${workflow}" "${COMFYUI_WORKFLOW_DIR}/$(basename "${workflow}")"
+    echo "Installed bundled workflow: $(basename "${workflow}")"
   done
 }
 

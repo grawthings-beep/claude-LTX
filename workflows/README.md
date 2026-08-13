@@ -2,7 +2,7 @@
 
 Bundled workflow:
 
-- `i2v.json`
+- `mrxin-i2v.json`
 
 This is the unmodified `MrXin LTX 2.3 I2V EROS V4` workflow imported from
 `mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`. It includes the 10Eros checkpoint and
