@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
-WORKFLOW_SHA256 = "aa08fa161db0f1a03ee166576a28ec13fd07257ebe33d0097dcb9f0fc89e9806"
+WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 
 
 def load_workflow():
@@ -135,6 +135,13 @@ class WorkflowTests(unittest.TestCase):
             "ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
         )
         self.assertEqual(distilled["strength"], 0.6)
+
+    def test_resolution_slider_values_match_the_960x1280_default(self):
+        nodes = {node["id"]: node for node in load_workflow()["nodes"]}
+
+        for node_id, expected in ((19, 960), (181, 1280)):
+            self.assertEqual(nodes[node_id]["properties"]["value"], expected)
+            self.assertEqual(nodes[node_id]["widgets_values"][:2], [expected, expected])
 
     def test_i2v_conditioning_and_decode_defaults_reduce_artifacts(self):
         subgraph = load_workflow()["definitions"]["subgraphs"][0]
