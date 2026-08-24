@@ -33,6 +33,11 @@ class ManifestTests(unittest.TestCase):
             "models/checkpoints/LTX23_audio_vae_bf16.safetensors",
             "models/vae/taeltx2_3.safetensors",
             "models/upscale_models/nmkdSiaxCX_200k.safetensors",
+            "models/loras/LTX2/ltx-2.3-22b-distilled-lora-dynamic_fro09_avg_rank_105_bf16.safetensors",
+            "models/loras/LTX 2.3/LTX2.3_Reasoning_V1.safetensors",
+            "models/loras/LTX2/DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors",
+            "models/loras/LTX2/LTX2_3_NSFW_furry_concat_v2.safetensors",
+            "models/loras/LTX 2.3/LTX-2.3 - Orgasm.safetensors",
             "models/loras/ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
@@ -82,20 +87,25 @@ class ManifestTests(unittest.TestCase):
             "models/vae/LTX23_video_vae_bf16.safetensors",
             "models/checkpoints/LTX23_audio_vae_bf16.safetensors",
             "models/vae/taeltx2_3.safetensors",
+            "models/loras/LTX2/ltx-2.3-22b-distilled-lora-dynamic_fro09_avg_rank_105_bf16.safetensors",
+            "models/loras/LTX 2.3/LTX2.3_Reasoning_V1.safetensors",
+            "models/loras/LTX2/DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors",
+            "models/loras/LTX2/LTX2_3_NSFW_furry_concat_v2.safetensors",
+            "models/loras/LTX 2.3/LTX-2.3 - Orgasm.safetensors",
             "models/loras/ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
         }
         self.assertTrue(all(by_path[path]["priority"] == 0 for path in startup_paths))
 
-    def test_optional_lora_stack_downloads_after_default_models(self):
+    def test_upstream_active_lora_stack_has_startup_priority(self):
         by_name = {entry["name"]: entry for entry in load_models()}
-        optional = {
+        active = {
             "LTX 2.3 distilled dynamic rank 105 LoRA",
             "LTX 2.3 Reasoning V1 LoRA",
             "DR34ML4Y LTX preview LoRA",
             "LTX 2.3 NSFW furry concat v2 LoRA",
             "LTX 2.3 Orgasm LoRA",
         }
-        self.assertTrue(all(by_name[name]["priority"] == 10 for name in optional))
+        self.assertTrue(all(by_name[name]["priority"] == 0 for name in active))
 
 
 if __name__ == "__main__":
