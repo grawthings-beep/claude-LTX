@@ -6,14 +6,16 @@ Only one workflow is bundled:
 
 - `mrxin-i2v.json`
 
-`mrxin-i2v.json` is the unmodified workflow JSON from Civitai model version
-`2835183` (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
+`mrxin-i2v.json` keeps the graph from Civitai model version `2835183`
+(`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
 model switch, two-stage I2V path, audio path, optional editor, RIFE interpolation,
 and optional RTX video super resolution.
 
-The bundled JSON preserves the author's defaults: the 10Eros model branch,
-standalone CLIP/video VAE/audio VAE branches, the original active content LoRA
-stack, and the dynamic rank-105 distilled LoRA.
+The RunPod defaults use the complete 10Eros checkpoint branch, TenStrip's
+I2V-safe `condsafe` distilled LoRA, five-second 960x1280 generation, official
+first-pass I2V conditioning strength, and the VAE last-frame artifact fix.
+Content LoRAs remain available but start disabled so combinations can be tested
+one at a time.
 The standalone audio VAE is stored under `models/checkpoints`, which is the
 directory read by ComfyUI's `LTXVAudioVAELoader`.
 

@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
-WORKFLOW_SHA256 = "5ca6f5802bd8cebb90b4030f11f7a7f7d563f8032e753913a60eb846bd9c098c"
+WORKFLOW_SHA256 = "314e7c001e794eedaf15bcb3fc384c675c77efe80c01db72a15e39257e384c04"
 
 
 def load_workflow():
@@ -49,7 +49,7 @@ class WorkflowTests(unittest.TestCase):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
         self.assertEqual(names, {I2V_WORKFLOW})
 
-    def test_upstream_workflow_is_locked(self):
+    def test_noise_safe_workflow_is_locked(self):
         digest = hashlib.sha256((WORKFLOWS / I2V_WORKFLOW).read_bytes()).hexdigest()
         self.assertEqual(digest, WORKFLOW_SHA256)
 
@@ -97,30 +97,25 @@ class WorkflowTests(unittest.TestCase):
             ["ltx-2.3-spatial-upscaler-x2-1.1.safetensors"],
         )
         self.assertEqual(nodes[170]["widgets_values"], ["nmkdSiaxCX_200k.safetensors"])
-        self.assertEqual(nodes[18]["widgets_values"], [20, 20, 0])
-        self.assertEqual(nodes[19]["widgets_values"], [704, 704, 0])
+        self.assertEqual(nodes[18]["widgets_values"], [5, 5, 0])
+        self.assertEqual(nodes[19]["widgets_values"], [960, 960, 0])
         self.assertEqual(nodes[181]["widgets_values"], [1280, 1280, 0])
-        self.assertEqual(nodes[191]["widgets_values"], [1])
         self.assertTrue(
-            all(nodes[node_id]["widgets_values"] == [2] for node_id in (192, 193, 194))
+            all(nodes[node_id]["widgets_values"] == [1] for node_id in (191, 192, 193, 194))
         )
+        prompt = nodes[28]["widgets_values"][0]
+        self.assertNotIn("3D, Real Video", prompt)
+        self.assertNotIn("25 seconds", prompt)
+        self.assertIn("Five seconds", prompt)
 
-    def test_default_lora_stack_matches_upstream(self):
+    def test_default_lora_stack_is_noise_safe(self):
         nodes = {node["id"]: node for node in load_workflow()["nodes"]}
         active = {
             widget["lora"]
             for widget in nodes[6]["widgets_values"]
             if isinstance(widget, dict) and widget.get("on") and widget.get("lora")
         }
-        self.assertEqual(
-            active,
-            {
-                "LTX 2.3\\LTX2.3_Reasoning_V1.safetensors",
-                "LTX2\\DR34ML4Y_LTXXX_PREVIEW_RC1.safetensors",
-                "LTX2\\LTX2_3_NSFW_furry_concat_v2.safetensors",
-                "LTX 2.3\\LTX-2.3 - Orgasm.safetensors",
-            },
-        )
+        self.assertEqual(active, set())
         configured = {
             widget["lora"]
             for widget in nodes[6]["widgets_values"]
@@ -134,9 +129,17 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(distilled["on"])
         self.assertEqual(
             distilled["lora"],
-            "LTX2\\ltx-2.3-22b-distilled-lora-dynamic_fro09_avg_rank_105_bf16.safetensors",
+            "ltx23/ltx-2.3-22b-distilled-lora-1.1_fro90_ceil72_condsafe.safetensors",
         )
         self.assertEqual(distilled["strength"], 0.6)
+
+    def test_i2v_conditioning_and_decode_defaults_reduce_artifacts(self):
+        subgraph = load_workflow()["definitions"]["subgraphs"][0]
+        nodes = {node["id"]: node for node in subgraph["nodes"]}
+
+        self.assertEqual(nodes[44]["widgets_values"], [0.7, False])
+        self.assertEqual(nodes[87]["widgets_values"], [1, False])
+        self.assertEqual(nodes[149]["widgets_values"], [4, 4, 24, 4, True, "auto", "auto"])
 
     def test_required_custom_nodes_are_pinned(self):
         lines = (ROOT / "custom_nodes.txt").read_text(encoding="utf-8").splitlines()
