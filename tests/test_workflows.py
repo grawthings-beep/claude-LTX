@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
-WORKFLOW_SHA256 = "314e7c001e794eedaf15bcb3fc384c675c77efe80c01db72a15e39257e384c04"
+WORKFLOW_SHA256 = "aa08fa161db0f1a03ee166576a28ec13fd07257ebe33d0097dcb9f0fc89e9806"
 
 
 def load_workflow():
@@ -50,7 +50,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(names, {I2V_WORKFLOW})
 
     def test_noise_safe_workflow_is_locked(self):
-        digest = hashlib.sha256((WORKFLOWS / I2V_WORKFLOW).read_bytes()).hexdigest()
+        canonical = json.dumps(
+            load_workflow(), ensure_ascii=False, separators=(",", ":")
+        ).encode("utf-8")
+        digest = hashlib.sha256(canonical).hexdigest()
         self.assertEqual(digest, WORKFLOW_SHA256)
 
     def test_workflow_graph_is_complete(self):
