@@ -2,9 +2,10 @@
 
 RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
-Only one workflow is bundled:
+Two workflows are bundled:
 
 - `mrxin-i2v.json`
+- `mrxin-i2v-hq.json`
 
 `mrxin-i2v.json` keeps the graph from Civitai model version `2835183`
 (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
@@ -16,6 +17,10 @@ I2V-safe `condsafe` distilled LoRA, five-second 960x1280 generation, official
 first-pass I2V conditioning strength, and the VAE last-frame artifact fix.
 Content LoRAs remain available but start disabled so combinations can be tested
 one at a time.
+`mrxin-i2v-hq.json` is an experimental high-resolution copy. It generates the
+first pass at 896x1184 and uses the latent x2 stage for a 1792x2368 final video.
+Its I2V image path bypasses the original 1536-pixel longer-edge reduction so
+the final pass receives the full-resolution conditioning image.
 The standalone audio VAE is stored under `models/checkpoints`, which is the
 directory read by ComfyUI's `LTXVAudioVAELoader`.
 
@@ -37,7 +42,8 @@ The image uses a pinned CUDA 13.0 RunPod base with PyTorch cu130 for RTX 5090
 support and bundles the external node packs required by the workflow. At
 startup it repairs missing NVIDIA UVM device nodes when the container permits
 it, removes the retired bundled `i2v.json`, `original.json`, and `loop.json`
-files, installs `mrxin-i2v.json`, then performs a low-level CUDA driver probe.
+files, installs the bundled workflows, then performs a low-level CUDA driver
+probe.
 ComfyUI starts immediately
 while model downloads continue in the background. The `cuda12.8` tag remains
 as a compatibility alias for existing templates.

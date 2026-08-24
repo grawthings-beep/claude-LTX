@@ -7,11 +7,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
+HQ_I2V_WORKFLOW = "mrxin-i2v-hq.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
+HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
 
 
-def load_workflow():
-    return json.loads((WORKFLOWS / I2V_WORKFLOW).read_text(encoding="utf-8"))
+def load_workflow(name=I2V_WORKFLOW):
+    return json.loads((WORKFLOWS / name).read_text(encoding="utf-8"))
 
 
 def assert_root_graph_complete(testcase, workflow):
@@ -45,16 +47,22 @@ def assert_subgraph_complete(testcase, subgraph):
 
 
 class WorkflowTests(unittest.TestCase):
-    def test_only_mrxin_i2v_workflow_is_bundled(self):
+    def test_standard_and_hq_mrxin_i2v_workflows_are_bundled(self):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
-        self.assertEqual(names, {I2V_WORKFLOW})
+        self.assertEqual(names, {I2V_WORKFLOW, HQ_I2V_WORKFLOW})
 
     def test_noise_safe_workflow_is_locked(self):
-        canonical = json.dumps(
-            load_workflow(), ensure_ascii=False, separators=(",", ":")
-        ).encode("utf-8")
-        digest = hashlib.sha256(canonical).hexdigest()
-        self.assertEqual(digest, WORKFLOW_SHA256)
+        expected_hashes = {
+            I2V_WORKFLOW: WORKFLOW_SHA256,
+            HQ_I2V_WORKFLOW: HQ_WORKFLOW_SHA256,
+        }
+        for name, expected_hash in expected_hashes.items():
+            with self.subTest(workflow=name):
+                canonical = json.dumps(
+                    load_workflow(name), ensure_ascii=False, separators=(",", ":")
+                ).encode("utf-8")
+                digest = hashlib.sha256(canonical).hexdigest()
+                self.assertEqual(digest, expected_hash)
 
     def test_workflow_graph_is_complete(self):
         workflow = load_workflow()
@@ -142,6 +150,36 @@ class WorkflowTests(unittest.TestCase):
         for node_id, expected in ((19, 960), (181, 1280)):
             self.assertEqual(nodes[node_id]["properties"]["value"], expected)
             self.assertEqual(nodes[node_id]["widgets_values"][:2], [expected, expected])
+
+    def test_hq_workflow_preserves_full_resolution_for_both_i2v_stages(self):
+        workflow = load_workflow(HQ_I2V_WORKFLOW)
+        nodes = {node["id"]: node for node in workflow["nodes"]}
+        subgraph = workflow["definitions"]["subgraphs"][0]
+        subnodes = {node["id"]: node for node in subgraph["nodes"]}
+        links = {link["id"]: link for link in subgraph["links"]}
+
+        self.assertEqual(nodes[19]["properties"]["value"], 1792)
+        self.assertEqual(nodes[19]["widgets_values"][:2], [1792, 1792])
+        self.assertEqual(nodes[181]["properties"]["value"], 2368)
+        self.assertEqual(nodes[181]["widgets_values"][:2], [2368, 2368])
+
+        first_pass = (1792 // 2, 2368 // 2)
+        self.assertEqual(first_pass, (896, 1184))
+        self.assertTrue(all(value % 32 == 0 for value in first_pass))
+        self.assertNotIn(
+            "ResizeImagesByLongerEdge", {n["type"] for n in subnodes.values()}
+        )
+        self.assertEqual(links[379]["origin_id"], 178)
+        self.assertEqual(links[379]["target_id"], 232)
+        self.assertIn(379, subnodes[178]["outputs"][0]["links"])
+        self.assertEqual(subnodes[232]["outputs"][0]["links"], [383, 384])
+        self.assertEqual(subnodes[44]["inputs"][1]["link"], 383)
+        self.assertEqual(subnodes[87]["inputs"][1]["link"], 384)
+
+        self.assertEqual(len(workflow["nodes"]), 97)
+        self.assertEqual(len(subgraph["nodes"]), 46)
+        assert_root_graph_complete(self, workflow)
+        assert_subgraph_complete(self, subgraph)
 
     def test_i2v_conditioning_and_decode_defaults_reduce_artifacts(self):
         subgraph = load_workflow()["definitions"]["subgraphs"][0]
