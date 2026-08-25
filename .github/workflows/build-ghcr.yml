@@ -21,6 +21,7 @@ jobs:
           bash -n scripts/start.sh scripts/common.sh scripts/install_custom_nodes.sh scripts/container_smoke.sh
           python3 -m py_compile scripts/download_models.py scripts/check_env.py scripts/check_workflow_nodes.py scripts/long_video.py scripts/prepare_workflows.py scripts/recipe_matrix.py custom_nodepacks/ComfyUI-LTXLoop/__init__.py custom_nodepacks/ComfyUI-LTXLoop/nodes.py custom_nodepacks/ComfyUI-LTXLoop/mosaic_nodes.py
           python3 scripts/prepare_workflows.py --check
+          python3 -m pip install --disable-pip-version-check numpy==2.2.6
           python3 -m unittest discover -s tests -v
 
       - name: Set up Docker Buildx
