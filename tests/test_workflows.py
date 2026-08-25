@@ -9,9 +9,11 @@ WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
 HQ_I2V_WORKFLOW = "mrxin-i2v-hq.json"
 AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-auto-mosaic.json"
+TWO_STAGE_AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-2stage-auto-mosaic.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
 AUTO_MOSAIC_WORKFLOW_SHA256 = "2aa465caa8f330225a36cb39360d31fce9e5f79a71eb323125b9ef5fb0f161bf"
+TWO_STAGE_AUTO_MOSAIC_WORKFLOW_SHA256 = "d31713e55752c9b385c4abd99a88ffc546f1bb035831ebdc96abb214beda599c"
 
 
 def load_workflow(name=I2V_WORKFLOW):
@@ -99,7 +101,13 @@ class WorkflowTests(unittest.TestCase):
     def test_standard_hq_and_auto_mosaic_workflows_are_bundled(self):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
         self.assertEqual(
-            names, {I2V_WORKFLOW, HQ_I2V_WORKFLOW, AUTO_MOSAIC_WORKFLOW}
+            names,
+            {
+                I2V_WORKFLOW,
+                HQ_I2V_WORKFLOW,
+                AUTO_MOSAIC_WORKFLOW,
+                TWO_STAGE_AUTO_MOSAIC_WORKFLOW,
+            },
         )
 
     def test_noise_safe_workflow_is_locked(self):
@@ -107,6 +115,7 @@ class WorkflowTests(unittest.TestCase):
             I2V_WORKFLOW: WORKFLOW_SHA256,
             HQ_I2V_WORKFLOW: HQ_WORKFLOW_SHA256,
             AUTO_MOSAIC_WORKFLOW: AUTO_MOSAIC_WORKFLOW_SHA256,
+            TWO_STAGE_AUTO_MOSAIC_WORKFLOW: TWO_STAGE_AUTO_MOSAIC_WORKFLOW_SHA256,
         }
         for name, expected_hash in expected_hashes.items():
             with self.subTest(workflow=name):
@@ -320,6 +329,93 @@ class WorkflowTests(unittest.TestCase):
         )
         self.assertEqual(subnodes[first_pass_output["origin_id"]]["type"], "VAEDecode")
 
+    def test_two_stage_auto_mosaic_preserves_hq_and_wraps_final_encoder(self):
+        workflow = load_workflow(TWO_STAGE_AUTO_MOSAIC_WORKFLOW)
+        hq = load_workflow(HQ_I2V_WORKFLOW)
+        nodes = {node["id"]: node for node in workflow["nodes"]}
+        links = {link[0]: link for link in workflow["links"]}
+        subgraph_ids = {
+            subgraph["id"] for subgraph in workflow["definitions"]["subgraphs"]
+        }
+        instance = next(
+            node for node in workflow["nodes"] if node["type"] in subgraph_ids
+        )
+        mosaics = [
+            node
+            for node in workflow["nodes"]
+            if node["type"] == "WanAutoMosaicVideo"
+        ]
+
+        self.assertEqual(workflow["definitions"], hq["definitions"])
+        self.assertEqual(len(mosaics), 1)
+        mosaic = mosaics[0]
+        self.assertEqual(
+            mosaic["widgets_values"],
+            [
+                "ntd11_anime_nsfw_segm_v5.pt",
+                "JUST",
+                0.3,
+                0.5,
+                0,
+                3,
+                "pussy,penis,testicles",
+            ],
+        )
+        self.assertEqual(
+            links[mosaic["inputs"][0]["link"]][1:3], [instance["id"], 4]
+        )
+
+        final_encoder = nodes[61]
+        self.assertEqual(
+            links[final_encoder["inputs"][0]["link"]][1:3],
+            [mosaic["id"], 0],
+        )
+        self.assertEqual(
+            links[final_encoder["inputs"][1]["link"]][1:3],
+            [instance["id"], 5],
+        )
+        self.assertEqual(
+            links[nodes[59]["inputs"][0]["link"]][1:3],
+            [instance["id"], 2],
+        )
+        self.assertTrue(final_encoder["widgets_values"]["save_output"])
+        self.assertEqual(
+            workflow["extra"]["runpod_bundle"]["final_resolution"],
+            [1792, 2368],
+        )
+        self.assertTrue(workflow["extra"]["runpod_bundle"]["latent_upscale"])
+
+        mosaic_rect = [*mosaic["pos"], *mosaic["size"]]
+        mx, my, mw, mh = map(float, mosaic_rect)
+        for node in workflow["nodes"]:
+            if node["id"] == mosaic["id"]:
+                continue
+            nx, ny = map(float, node["pos"])
+            nw, nh = map(float, node.get("size", [220, 80])[:2])
+            overlaps = (
+                min(mx + mw, nx + nw) > max(mx, nx)
+                and min(my + mh, ny + nh) > max(my, ny)
+            )
+            self.assertFalse(overlaps, node["id"])
+
+        group_by_id = {group["id"]: group for group in workflow["groups"]}
+        mosaic_group = next(
+            group
+            for group in workflow["groups"]
+            if group["title"] == "Final Auto Mosaic (CPU / JUST)"
+        )
+        self.assertLess(
+            group_by_id[14]["bounding"][0], mosaic_group["bounding"][0]
+        )
+        self.assertLess(
+            mosaic_group["bounding"][0], group_by_id[16]["bounding"][0]
+        )
+        self.assertLess(
+            group_by_id[16]["bounding"][0], group_by_id[26]["bounding"][0]
+        )
+        assert_root_graph_complete(self, workflow)
+        assert_subgraph_complete(self, workflow["definitions"]["subgraphs"][0])
+
     def test_auto_mosaic_serialization_and_layout_are_complete(self):
         workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)
         subgraph = workflow["definitions"]["subgraphs"][0]
@@ -344,6 +440,7 @@ class WorkflowTests(unittest.TestCase):
         )
         self.assertIn("_auto_mosaic_node", generator)
         self.assertIn("_prune_subgraph_to_first_pass", generator)
+        self.assertIn("patch_two_stage_auto_mosaic", generator)
         self.assertIn("--check", generator)
 
     def test_i2v_conditioning_and_decode_defaults_reduce_artifacts(self):

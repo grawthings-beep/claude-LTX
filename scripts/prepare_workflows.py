@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the focused first-pass auto-mosaic workflow."""
+"""Generate first-pass and two-stage auto-mosaic workflows."""
 
 from __future__ import annotations
 
@@ -13,12 +13,18 @@ import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "workflows" / "mrxin-i2v-hq.json"
-OUTPUT = ROOT / "workflows" / "mrxin-i2v-auto-mosaic.json"
+FIRST_PASS_OUTPUT = ROOT / "workflows" / "mrxin-i2v-auto-mosaic.json"
+TWO_STAGE_OUTPUT = ROOT / "workflows" / "mrxin-i2v-2stage-auto-mosaic.json"
 AUTO_WORKFLOW_ID = str(
     uuid.uuid5(uuid.NAMESPACE_URL, "claude-LTX/mrxin-i2v-auto-mosaic")
 )
 AUTO_SUBGRAPH_ID = str(
     uuid.uuid5(uuid.NAMESPACE_URL, "claude-LTX/mrxin-i2v-auto-mosaic/first-pass")
+)
+TWO_STAGE_AUTO_WORKFLOW_ID = str(
+    uuid.uuid5(
+        uuid.NAMESPACE_URL, "claude-LTX/mrxin-i2v-2stage-auto-mosaic"
+    )
 )
 
 
@@ -496,6 +502,117 @@ def patch_auto_mosaic(source):
     return graph
 
 
+def patch_two_stage_auto_mosaic(source):
+    graph = copy.deepcopy(source)
+    graph["id"] = TWO_STAGE_AUTO_WORKFLOW_ID
+    graph["revision"] = 0
+
+    subgraph_ids = {
+        subgraph["id"] for subgraph in graph["definitions"]["subgraphs"]
+    }
+    instance = next(
+        node for node in graph["nodes"] if node["type"] in subgraph_ids
+    )
+    encoder = next(node for node in graph["nodes"] if node["id"] == 61)
+
+    final_group = next(
+        group for group in graph["groups"] if group["id"] == 16
+    )
+    editor_group = next(
+        group for group in graph["groups"] if group["id"] == 26
+    )
+    editor_left = float(editor_group["bounding"][0])
+    editor_right = editor_left + float(editor_group["bounding"][2])
+    shift = 500.0
+
+    for node in graph["nodes"]:
+        if editor_left <= float(node["pos"][0]) <= editor_right:
+            node["pos"][0] = float(node["pos"][0]) + shift
+
+    editor_group_ids = {26, 27, 28, 29, 32, 34, 42, 51}
+    for group in graph["groups"]:
+        if group["id"] in editor_group_ids:
+            group["bounding"][0] = float(group["bounding"][0]) + shift
+
+    final_x = float(final_group["bounding"][0])
+    final_group["bounding"][0] = final_x + shift
+    final_group["title"] = "Final Auto Mosaic Video"
+    encoder["pos"][0] = float(encoder["pos"][0]) + shift
+    encoder["title"] = "FINAL AUTO MOSAIC MP4"
+    encoder["widgets_values"].update(
+        {
+            "filename_prefix": "MrXin/LTX2.3/AutoMosaic/TwoStage",
+            "save_metadata": True,
+            "save_output": True,
+            "videopreview": {
+                "hidden": False,
+                "paused": False,
+                "params": {},
+            },
+        }
+    )
+
+    parent = next(group for group in graph["groups"] if group["id"] == 25)
+    parent["bounding"][2] = float(parent["bounding"][2]) + shift
+
+    mosaic_id = max(node["id"] for node in graph["nodes"]) + 1
+    mosaic = _auto_mosaic_node(
+        mosaic_id,
+        (final_x + 10.0, float(encoder["pos"][1])),
+        max(node.get("order", 0) for node in graph["nodes"]) + 1,
+    )
+    graph["nodes"].append(mosaic)
+
+    upstream_link = next(link for link in graph["links"] if link[0] == 359)
+    if upstream_link[1:3] != [instance["id"], 4] or upstream_link[3:] != [
+        encoder["id"],
+        0,
+        "IMAGE",
+    ]:
+        raise ValueError("unexpected two-stage final video wiring in source workflow")
+    upstream_link[3] = mosaic_id
+    upstream_link[4] = 0
+    mosaic_to_encode = max(link[0] for link in graph["links"]) + 1
+    graph["links"].append(
+        [mosaic_to_encode, mosaic_id, 0, encoder["id"], 0, "IMAGE"]
+    )
+
+    graph["groups"].append(
+        {
+            "id": max(group["id"] for group in graph["groups"]) + 1,
+            "title": "Final Auto Mosaic (CPU / JUST)",
+            "bounding": [
+                final_x,
+                float(final_group["bounding"][1]),
+                430,
+                500,
+            ],
+            "color": "#7a3f83",
+            "font_size": 24,
+            "flags": {},
+        }
+    )
+
+    graph["last_node_id"] = max(node["id"] for node in graph["nodes"])
+    graph["last_link_id"] = max(link[0] for link in graph["links"])
+    graph.setdefault("extra", {})["runpod_bundle"] = {
+        "preset": "mrxin-i2v-two-stage-auto-mosaic",
+        "postprocess": (
+            "Anime NSFW Detection v5 YOLO11-seg JUST contour mosaic "
+            "on CPU after the second pass and before final MP4 encode"
+        ),
+        "requires": [
+            "models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt",
+            "CIVITAI_API_TOKEN",
+        ],
+        "first_pass_resolution": [896, 1184],
+        "final_resolution": [1792, 2368],
+        "latent_upscale": True,
+    }
+    _rebuild_root_endpoints(graph)
+    return graph
+
+
 def encode(graph):
     return (
         json.dumps(graph, ensure_ascii=False, separators=(",", ":")) + "\n"
@@ -508,15 +625,28 @@ def main():
     args = parser.parse_args()
 
     source = json.loads(SOURCE.read_text(encoding="utf-8"))
-    expected = encode(patch_auto_mosaic(source))
+    outputs = {
+        FIRST_PASS_OUTPUT: encode(patch_auto_mosaic(source)),
+        TWO_STAGE_OUTPUT: encode(patch_two_stage_auto_mosaic(source)),
+    }
     if args.check:
-        if not OUTPUT.is_file() or OUTPUT.read_bytes() != expected:
-            print(f"Generated workflow is stale: {OUTPUT.relative_to(ROOT)}", file=sys.stderr)
+        stale = [
+            output
+            for output, expected in outputs.items()
+            if not output.is_file() or output.read_bytes() != expected
+        ]
+        if stale:
+            for output in stale:
+                print(
+                    f"Generated workflow is stale: {output.relative_to(ROOT)}",
+                    file=sys.stderr,
+                )
             return 1
         return 0
 
-    OUTPUT.write_bytes(expected)
-    print(f"WROTE {OUTPUT.relative_to(ROOT)}")
+    for output, expected in outputs.items():
+        output.write_bytes(expected)
+        print(f"WROTE {output.relative_to(ROOT)}")
     return 0
 
 

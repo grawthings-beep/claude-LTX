@@ -2,11 +2,12 @@
 
 RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
-Three workflows are bundled:
+Four workflows are bundled:
 
 - `mrxin-i2v.json`
 - `mrxin-i2v-hq.json`
 - `mrxin-i2v-auto-mosaic.json`
+- `mrxin-i2v-2stage-auto-mosaic.json`
 
 `mrxin-i2v.json` keeps the graph from Civitai model version `2835183`
 (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
@@ -27,6 +28,10 @@ it does not run the latent x2 stage. After VAE decode, a CPU-only YOLO11
 instance-segmentation node applies the JUST contour mosaic once, immediately
 before MP4 encoding. The input image is never mosaicked. Default targets are
 `pussy`, `penis`, and `testicles`; `anus` is excluded.
+`mrxin-i2v-2stage-auto-mosaic.json` preserves both HQ generation stages and
+the latent x2 step. It applies the same CPU JUST contour mosaic once after the
+second-pass VAE decode and immediately before the final MP4 encoder. The
+first-pass preview path and input image are unchanged.
 The standalone audio VAE is stored under `models/checkpoints`, which is the
 directory read by ComfyUI's `LTXVAudioVAELoader`.
 
