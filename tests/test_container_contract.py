@@ -26,6 +26,7 @@ class ContainerContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn('"${MODEL_ROOT}/models/auto_mosaic"', start)
+        self.assertIn("export MODEL_ROOT", start)
         self.assertIn("YOLO_CONFIG_DIR", start)
         self.assertIn('YOLO_AUTOINSTALL="${YOLO_AUTOINSTALL:-false}"', start)
         self.assertIn('YOLO_OFFLINE="${YOLO_OFFLINE:-true}"', start)

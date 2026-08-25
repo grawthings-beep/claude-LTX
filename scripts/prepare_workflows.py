@@ -139,9 +139,13 @@ def _rebuild_subgraph_endpoints(subgraph):
             by_id[target_id]["inputs"][link["target_slot"]]["link"] = link_id
 
 
-def _flatten_and_pack_groups(graph):
-    """Pack every node into one non-overlapping left-to-right group row."""
+def _flatten_and_pack_groups(
+    graph, *, group_order=None, node_group_overrides=None
+):
+    """Pack nodes into spacious, non-overlapping left-to-right groups."""
     groups = graph["groups"]
+    group_by_id = {group["id"]: group for group in groups}
+    node_group_overrides = node_group_overrides or {}
 
     def contains(group, node):
         gx, gy, gw, gh = map(float, group["bounding"])
@@ -156,19 +160,32 @@ def _flatten_and_pack_groups(graph):
 
     buckets = {}
     for node in graph["nodes"]:
-        candidates = [group for group in groups if contains(group, node)]
-        if not candidates:
-            raise ValueError(f"root node is outside every group: {node['id']}")
-        owner = min(
-            candidates,
-            key=lambda group: float(group["bounding"][2])
-            * float(group["bounding"][3]),
-        )
+        owner_id = node_group_overrides.get(node["id"])
+        if owner_id is not None:
+            owner = group_by_id[owner_id]
+        else:
+            candidates = [group for group in groups if contains(group, node)]
+            if not candidates:
+                raise ValueError(
+                    f"root node is outside every group: {node['id']}"
+                )
+            owner = min(
+                candidates,
+                key=lambda group: float(group["bounding"][2])
+                * float(group["bounding"][3]),
+            )
         buckets.setdefault(owner["id"], []).append(node)
 
     active_groups = [group for group in groups if group["id"] in buckets]
+    group_rank = {
+        group_id: index for index, group_id in enumerate(group_order or [])
+    }
     active_groups.sort(
-        key=lambda group: (float(group["bounding"][0]), float(group["bounding"][1]))
+        key=lambda group: (
+            group_rank.get(group["id"], len(group_rank)),
+            float(group["bounding"][0]),
+            float(group["bounding"][1]),
+        )
     )
     cursor_x = 0.0
     top = 3000.0
@@ -178,15 +195,18 @@ def _flatten_and_pack_groups(graph):
             key=lambda node: (float(node["pos"][1]), float(node["pos"][0])),
         )
         width = max(
-            300.0,
-            max(float(node.get("size", [220, 80])[0]) for node in nodes) + 20.0,
+            340.0,
+            max(float(node.get("size", [220, 80])[0]) for node in nodes)
+            + 64.0,
         )
-        cursor_y = top + 55.0
-        for node in nodes:
-            node["pos"] = [cursor_x + 10.0, cursor_y]
-            cursor_y += float(node.get("size", [220, 80])[1]) + 14.0
-        group["bounding"] = [cursor_x, top, width, cursor_y - top + 10.0]
-        cursor_x += width + 20.0
+        cursor_y = top + 80.0
+        for index, node in enumerate(nodes):
+            node["pos"] = [cursor_x + 32.0, cursor_y]
+            cursor_y += float(node.get("size", [220, 80])[1])
+            if index + 1 < len(nodes):
+                cursor_y += 56.0
+        group["bounding"] = [cursor_x, top, width, cursor_y - top + 32.0]
+        cursor_x += width + 80.0
 
     graph["groups"] = active_groups
     graph.setdefault("extra", {})["ds"] = {
@@ -263,7 +283,9 @@ def _prune_subgraph_to_first_pass(subgraph):
         2320,
         3500,
     ]
-    right_edge = _flatten_and_pack_groups(subgraph)
+    right_edge = _flatten_and_pack_groups(
+        subgraph, group_order=[37, 11, 12, 19, 38, 21]
+    )
     for index, interface in enumerate(subgraph["inputs"]):
         interface["pos"] = [-20.0, 3060.0 + index * 22.0]
     for index, interface in enumerate(subgraph["outputs"]):
@@ -311,7 +333,19 @@ def patch_auto_mosaic(source):
         if editor_x <= float(node["pos"][0]) <= editor_x + editor_width
         and editor_y <= float(node["pos"][1]) <= editor_y + editor_height
     }
-    removed_node_ids = editor_node_ids | {4, 13, 110, 226, 228, 230, 61}
+    removed_node_ids = editor_node_ids | {
+        4,
+        13,
+        61,
+        110,
+        195,
+        204,
+        205,
+        211,
+        226,
+        228,
+        230,
+    }
     graph["nodes"] = [
         node for node in graph["nodes"] if node["id"] not in removed_node_ids
     ]
@@ -384,7 +418,7 @@ def patch_auto_mosaic(source):
         [
             {
                 "id": 52,
-                "title": "Workflow Notes",
+                "title": "Setup and Model Notes",
                 "bounding": [-1660, 2600, 520, 1505],
                 "color": "#3f789e",
                 "font_size": 24,
@@ -392,16 +426,8 @@ def patch_auto_mosaic(source):
             },
             {
                 "id": 53,
-                "title": "Workflow Controls",
-                "bounding": [-1110, 2850, 4540, 155],
-                "color": "#3f789e",
-                "font_size": 24,
-                "flags": {},
-            },
-            {
-                "id": 54,
-                "title": "Resolution Notes",
-                "bounding": [890, 2600, 1150, 220],
+                "title": "LoRA Trigger Notes",
+                "bounding": [640, 2600, 1400, 220],
                 "color": "#3f789e",
                 "font_size": 24,
                 "flags": {},
@@ -409,7 +435,47 @@ def patch_auto_mosaic(source):
         ]
     )
 
-    _flatten_and_pack_groups(graph)
+    _flatten_and_pack_groups(
+        graph,
+        group_order=[
+            52,
+            2,
+            44,
+            45,
+            46,
+            3,
+            4,
+            53,
+            5,
+            9,
+            6,
+            8,
+            49,
+            50,
+            25,
+            10,
+            7,
+            14,
+            16,
+            41,
+        ],
+        node_group_overrides={
+            142: 53,
+            143: 53,
+            144: 53,
+            145: 53,
+            146: 53,
+            156: 52,
+            161: 41,
+            162: 41,
+            163: 41,
+            175: 52,
+            218: 53,
+            219: 53,
+            223: 52,
+            241: 46,
+        },
+    )
 
     graph["last_node_id"] = max(node["id"] for node in graph["nodes"])
     graph["last_link_id"] = max(link[0] for link in graph["links"])

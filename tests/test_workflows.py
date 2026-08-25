@@ -11,7 +11,7 @@ HQ_I2V_WORKFLOW = "mrxin-i2v-hq.json"
 AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-auto-mosaic.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
-AUTO_MOSAIC_WORKFLOW_SHA256 = "e14c2a4aa45176e431b563b9d4c2115b820b5bf86c91aa0243eecb5f2e45e9c4"
+AUTO_MOSAIC_WORKFLOW_SHA256 = "2aa465caa8f330225a36cb39360d31fce9e5f79a71eb323125b9ef5fb0f161bf"
 
 
 def load_workflow(name=I2V_WORKFLOW):
@@ -67,10 +67,19 @@ def assert_layout_is_packed(testcase, graph):
             and outer[3] >= inner[3]
         )
 
+    def inflate(rect, amount):
+        return (
+            rect[0] - amount,
+            rect[1] - amount,
+            rect[2] + amount,
+            rect[3] + amount,
+        )
+
     groups = [rectangle(group["bounding"]) for group in graph["groups"]]
     for index, left in enumerate(groups):
         for right in groups[index + 1 :]:
             testcase.assertFalse(overlaps(left, right))
+            testcase.assertFalse(overlaps(inflate(left, 24), inflate(right, 24)))
 
     node_rectangles = []
     for node in graph["nodes"]:
@@ -80,6 +89,10 @@ def assert_layout_is_packed(testcase, graph):
     for index, (left_id, left) in enumerate(node_rectangles):
         for right_id, right in node_rectangles[index + 1 :]:
             testcase.assertFalse(overlaps(left, right), (left_id, right_id))
+            testcase.assertFalse(
+                overlaps(inflate(left, 20), inflate(right, 20)),
+                (left_id, right_id),
+            )
 
 
 class WorkflowTests(unittest.TestCase):
@@ -310,6 +323,16 @@ class WorkflowTests(unittest.TestCase):
     def test_auto_mosaic_serialization_and_layout_are_complete(self):
         workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)
         subgraph = workflow["definitions"]["subgraphs"][0]
+        self.assertEqual(
+            [group["id"] for group in workflow["groups"]],
+            [52, 2, 44, 45, 46, 3, 4, 53, 5, 9, 6, 8, 49, 50, 25, 10, 7, 14, 16, 41],
+        )
+        self.assertFalse(
+            any(
+                node.get("title") == "Enable VIDEO EDITOR"
+                for node in workflow["nodes"]
+            )
+        )
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, subgraph)
         assert_layout_is_packed(self, workflow)
