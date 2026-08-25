@@ -26,6 +26,9 @@ MODEL_DOWNLOAD_STATUS="${MODEL_DOWNLOAD_STATUS:-${MODEL_DOWNLOAD_LOG_DIR}/model-
 MODEL_DOWNLOAD_LOCK="${MODEL_DOWNLOAD_LOCK:-${MODEL_DOWNLOAD_LOG_DIR}/model-download.lock}"
 PORT="${PORT:-8188}"
 LISTEN="${LISTEN:-0.0.0.0}"
+export YOLO_CONFIG_DIR="${YOLO_CONFIG_DIR:-/workspace/.cache/ultralytics}"
+export YOLO_AUTOINSTALL="${YOLO_AUTOINSTALL:-false}"
+export YOLO_OFFLINE="${YOLO_OFFLINE:-true}"
 
 echo "claude-LTX image revision: ${CLAUDE_LTX_REVISION:-unknown}"
 
@@ -34,6 +37,7 @@ mkdir -p "${WORKSPACE_DIR}/input" \
          "${WORKSPACE_DIR}/exports" \
          "${COMFYUI_WORKFLOW_DIR}" \
          "${MODEL_DOWNLOAD_LOG_DIR}" \
+         "${MODEL_ROOT}/models/auto_mosaic" \
          "${MODEL_ROOT}/models/checkpoints" \
          "${MODEL_ROOT}/models/clip" \
          "${MODEL_ROOT}/models/clip_vision" \
@@ -49,7 +53,8 @@ mkdir -p "${WORKSPACE_DIR}/input" \
          "${MODEL_ROOT}/models/upscale_models" \
          "${MODEL_ROOT}/models/vae" \
          "${MODEL_ROOT}/models/vae_approx" \
-         "${CONFIG_DIR}"
+         "${CONFIG_DIR}" \
+         "${YOLO_CONFIG_DIR}"
 
 repair_nvidia_devices() {
   local capability
@@ -217,7 +222,8 @@ run_model_downloads() {
   echo "Model download started. Log: ${MODEL_DOWNLOAD_LOG}"
   if "${PYTHON_BIN}" /opt/claude-ltx/scripts/download_models.py \
     --manifest "${MODEL_MANIFEST}" \
-    --root "${MODEL_ROOT}"; then
+    --root "${MODEL_ROOT}" \
+    --exclude-group auto-mosaic; then
     if run_dependency_check; then
       write_download_status "complete"
       echo "Model download completed."
@@ -234,6 +240,35 @@ run_model_downloads() {
   return "${status}"
 }
 
+ensure_auto_mosaic_model() {
+  local model="${MODEL_ROOT}/models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt"
+
+  if [[ "${DOWNLOAD_MODELS:-1}" == "1" && -f "${MODEL_MANIFEST}" ]]; then
+    echo "Preparing required CPU auto-mosaic model before ComfyUI startup."
+    "${PYTHON_BIN}" /opt/claude-ltx/scripts/download_models.py \
+      --manifest "${MODEL_MANIFEST}" \
+      --root "${MODEL_ROOT}" \
+      --only-group auto-mosaic \
+      --jobs 1
+  fi
+
+  if [[ ! -s "${model}" ]]; then
+    echo "ERROR: required auto-mosaic model is missing: ${model}" >&2
+    echo "ERROR: set CIVITAI_API_TOKEN as a RunPod Secret and redeploy with DOWNLOAD_MODELS=1." >&2
+    exit 2
+  fi
+
+  "${PYTHON_BIN}" - <<'PY'
+from importlib.metadata import version
+
+installed = version("ultralytics")
+if installed != "8.4.104":
+    raise SystemExit(
+        f"required ultralytics version is 8.4.104, got {installed}"
+    )
+PY
+}
+
 start_background_downloads() {
   (
     exec 9> "${MODEL_DOWNLOAD_LOCK}"
@@ -247,6 +282,8 @@ start_background_downloads() {
   printf '%s\n' "${download_pid}" > "${MODEL_DOWNLOAD_LOG_DIR}/model-download.pid"
   echo "Model download is running in the background (PID ${download_pid})."
 }
+
+ensure_auto_mosaic_model
 
 if [[ "${DOWNLOAD_MODELS:-1}" != "1" || ! -f "${MODEL_MANIFEST}" ]]; then
   echo "Skipping model downloads."

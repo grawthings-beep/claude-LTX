@@ -77,7 +77,7 @@ def cleaned_headers(raw):
     headers = {}
     for key, value in (raw or {}).items():
         value = expand(str(value)).strip()
-        if not value:
+        if not value or has_unresolved_template(value):
             continue
         if key.lower() == "authorization" and value.lower() in {"bearer", "bearer ${hf_token}", "bearer ${civitai_token}"}:
             continue
@@ -85,6 +85,48 @@ def cleaned_headers(raw):
             continue
         headers[key] = value
     return headers
+
+
+def add_auth_query(url, env_name, query_name="token"):
+    if not env_name:
+        return url
+    token = os.environ.get(str(env_name), "").strip()
+    if not token or has_unresolved_template(token):
+        raise RuntimeError(f"missing required environment variable: {env_name}")
+    parsed = urllib.parse.urlparse(url)
+    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    query = [(key, value) for key, value in query if key != query_name]
+    query.append((query_name, token))
+    return urllib.parse.urlunparse(
+        parsed._replace(query=urllib.parse.urlencode(query))
+    )
+
+
+def redact_text(value):
+    text = str(value)
+    for name in ("CIVITAI_API_TOKEN", "CIVITAI_TOKEN", "HF_TOKEN"):
+        secret = os.environ.get(name, "")
+        if not secret:
+            continue
+        text = text.replace(secret, "[REDACTED]")
+        text = text.replace(urllib.parse.quote_plus(secret), "[REDACTED]")
+    return text
+
+
+def extracted_ready(entry, root, sentinel):
+    provided = [root / path for path in entry.get("provides", [])]
+    return (
+        bool(provided)
+        and sentinel.is_file()
+        and all(path.is_file() and path.stat().st_size > 0 for path in provided)
+    )
+
+
+def validate_size(path, expected_size, min_bytes):
+    actual_size = path.stat().st_size
+    if expected_size and actual_size != expected_size:
+        return False
+    return not min_bytes or actual_size >= min_bytes
 
 
 def sha256_file(path, name):
@@ -372,6 +414,7 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
     url = entry["url"]
     output = root / entry["path"]
     expected_sha = (entry.get("sha256") or "").upper()
+    expected_size = int(entry.get("size_bytes") or 0)
     min_bytes = int(entry.get("min_bytes") or 0)
     required = entry.get("required", True)
     headers = cleaned_headers(entry.get("headers"))
@@ -397,15 +440,17 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
             output.unlink()
         return
 
-    if extract and sentinel.exists():
+    if extract and extracted_ready(entry, root, sentinel):
         log(f"OK extracted: {name}")
         return
+    if extract and sentinel.exists():
+        sentinel.unlink()
 
     migrate_legacy_aria_download(output)
 
     if output.exists() and output.stat().st_size > 0:
-        if min_bytes and output.stat().st_size < min_bytes:
-            log(f"Too small, redownloading: {name}", error=True)
+        if not validate_size(output, expected_size, min_bytes):
+            log(f"Wrong size, redownloading: {name}", error=True)
             remove_verification_marker(output)
             output.unlink()
         elif expected_sha:
@@ -421,26 +466,31 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
         log(f"DOWNLOAD: {name}")
         download_started = time.monotonic()
         trusted_sha = ""
+        request_url = add_auth_query(
+            url,
+            entry.get("auth_query_env"),
+            entry.get("auth_query_name", "token"),
+        )
         if method == "curl" and shutil.which("curl"):
-            run_curl(url, output, headers)
+            run_curl(request_url, output, headers)
         elif method in {"", "auto", "hf", "huggingface"} and parse_huggingface_url(url):
             try:
                 trusted_sha = run_hf_hub(url, output, headers)
             except Exception as exc:
                 log(
-                    f"WARN hf_xet failed for {name}; falling back to aria2c: {exc}",
+                    f"WARN hf_xet failed for {name}; falling back to aria2c: {redact_text(exc)}",
                     error=True,
                 )
                 if use_aria2 and shutil.which("aria2c"):
-                    final_url = resolve_download_url(url, headers)
+                    final_url = resolve_download_url(request_url, headers)
                     run_aria2(final_url, output, connections, splits)
                 else:
-                    run_urllib(url, output, headers)
+                    run_urllib(request_url, output, headers)
         elif use_aria2 and entry.get("use_aria2", True) and shutil.which("aria2c"):
-            final_url = resolve_download_url(url, headers)
+            final_url = resolve_download_url(request_url, headers)
             run_aria2(final_url, output, connections, splits)
         else:
-            run_urllib(url, output, headers)
+            run_urllib(request_url, output, headers)
 
         elapsed = max(time.monotonic() - download_started, 0.001)
         size = output.stat().st_size
@@ -449,8 +499,12 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
             f"DOWNLOADED: {name} ({size / (1024 ** 3):.2f} GiB in "
             f"{elapsed:.1f}s, average {speed:.1f} MiB/s)"
         )
-        if min_bytes and output.stat().st_size < min_bytes:
-            raise RuntimeError(f"downloaded file is too small for {output.name}: {output.stat().st_size} bytes")
+        if not validate_size(output, expected_size, min_bytes):
+            raise RuntimeError(
+                f"downloaded file has the wrong size for {output.name}: "
+                f"expected {expected_size or f'at least {min_bytes}'}, "
+                f"got {output.stat().st_size} bytes"
+            )
         if expected_sha:
             if verify_hashes == "once" and trusted_sha == expected_sha:
                 write_verification_marker(output, expected_sha)
@@ -462,14 +516,25 @@ def download(entry, root, use_aria2, connections, splits, verify_hashes):
             if not names:
                 raise RuntimeError(f"no matching files extracted from {output.name}")
             sentinel.write_text("\n".join(names))
+            missing = [
+                path
+                for path in (root / item for item in entry.get("provides", []))
+                if not path.is_file() or path.stat().st_size == 0
+            ]
+            if missing:
+                sentinel.unlink(missing_ok=True)
+                raise RuntimeError(
+                    "archive did not provide: "
+                    + ", ".join(str(path.relative_to(root)) for path in missing)
+                )
             log(f"EXTRACTED ({name}): {', '.join(names)}")
     except Exception as exc:
         if output.exists():
             remove_verification_marker(output)
             output.unlink()
         if required:
-            raise
-        log(f"WARN optional model failed: {name}: {exc}", error=True)
+            raise RuntimeError(redact_text(exc)) from None
+        log(f"WARN optional model failed: {name}: {redact_text(exc)}", error=True)
 
 
 def main():
@@ -480,6 +545,8 @@ def main():
     parser.add_argument("--connections", type=int, default=int(os.environ.get("ARIA2_CONNECTIONS", "8")))
     parser.add_argument("--splits", type=int, default=int(os.environ.get("ARIA2_SPLITS", "8")))
     parser.add_argument("--jobs", type=int, default=int(os.environ.get("DOWNLOAD_JOBS", "1")))
+    parser.add_argument("--only-group", action="append", default=[])
+    parser.add_argument("--exclude-group", action="append", default=[])
     parser.add_argument(
         "--verify-hashes",
         choices=("once", "always", "never"),
@@ -490,10 +557,17 @@ def main():
     root = pathlib.Path(args.root)
     manifest = json.loads(pathlib.Path(args.manifest).read_text(encoding="utf-8"))
 
+    only_groups = set(args.only_group)
+    excluded_groups = set(args.exclude_group)
     entries = []
     for entry in manifest.get("models", []):
         if not entry.get("enabled", True):
             log(f"SKIP disabled: {entry.get('name') or entry.get('path')}")
+            continue
+        group = str(entry.get("group") or "")
+        if only_groups and group not in only_groups:
+            continue
+        if group in excluded_groups:
             continue
         entries.append(entry)
     entries.sort(key=lambda entry: int(entry.get("priority", 100)))

@@ -72,6 +72,31 @@ class ManifestTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
 
+    def test_auto_mosaic_segmentation_archive_is_pinned_and_verified(self):
+        entry = next(
+            entry for entry in load_models() if entry.get("group") == "auto-mosaic"
+        )
+        self.assertEqual(
+            entry["name"], "Anime NSFW Detection v5.0 YOLO11 Segmentation"
+        )
+        self.assertEqual(entry["url"], "https://civitai.com/api/download/models/2266294")
+        self.assertEqual(
+            entry["path"], "models/auto_mosaic/animeNSFWDetection_v50.zip"
+        )
+        self.assertEqual(entry["size_bytes"], 18846815)
+        self.assertEqual(
+            entry["sha256"],
+            "aca92864d30384b8dd7851b32e7ade621a147730bf9710fb4417214e0c61d690",
+        )
+        self.assertEqual(entry["extract"], "pt")
+        self.assertEqual(
+            entry["provides"],
+            ["models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt"],
+        )
+        self.assertEqual(entry["requires_env"], ["CIVITAI_API_TOKEN"])
+        self.assertEqual(entry["auth_query_env"], "CIVITAI_API_TOKEN")
+        self.assertTrue(entry["required"])
+
     def test_default_workflow_models_have_startup_priority(self):
         by_path = {entry["path"]: entry for entry in load_models()}
         startup_paths = {

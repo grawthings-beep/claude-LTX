@@ -1,10 +1,13 @@
 import hashlib
 import importlib.util
+import io
+import os
 import pathlib
 import sys
 import tempfile
 import types
 import unittest
+import zipfile
 from unittest import mock
 
 
@@ -15,6 +18,108 @@ SPEC.loader.exec_module(download_models)
 
 
 class DownloadModelsTest(unittest.TestCase):
+    def test_civitai_auth_query_comes_from_environment(self):
+        with mock.patch.dict(os.environ, {"CIVITAI_API_TOKEN": "top secret"}):
+            url = download_models.add_auth_query(
+                "https://civitai.com/api/download/models/2266294?download=1",
+                "CIVITAI_API_TOKEN",
+            )
+
+        self.assertIn("download=1", url)
+        self.assertIn("token=top+secret", url)
+        self.assertNotIn("top secret", download_models.redact_text(url))
+
+    def test_exact_size_validation_rejects_both_short_and_long_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = pathlib.Path(temp_dir) / "model.zip"
+            path.write_bytes(b"1234")
+            self.assertFalse(download_models.validate_size(path, 5, 0))
+            self.assertFalse(download_models.validate_size(path, 3, 0))
+            self.assertTrue(download_models.validate_size(path, 4, 0))
+
+    def test_extraction_cache_requires_every_provided_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+            sentinel = root / "models" / "auto_mosaic" / ".model.zip.extracted"
+            sentinel.parent.mkdir(parents=True)
+            sentinel.write_text("model.pt", encoding="utf-8")
+            entry = {
+                "provides": ["models/auto_mosaic/model.pt"],
+            }
+            self.assertFalse(
+                download_models.extracted_ready(entry, root, sentinel)
+            )
+            (sentinel.parent / "model.pt").write_bytes(b"weights")
+            self.assertTrue(download_models.extracted_ready(entry, root, sentinel))
+
+    def test_verified_zip_extracts_the_exact_provided_model(self):
+        archive_buffer = io.BytesIO()
+        with zipfile.ZipFile(archive_buffer, "w") as archive:
+            archive.writestr("nested/ntd11_anime_nsfw_segm_v5.pt", b"weights")
+            archive.writestr("ignored/readme.txt", b"ignored")
+        archive_bytes = archive_buffer.getvalue()
+        entry = {
+            "name": "mosaic model",
+            "url": "https://example.invalid/model.zip",
+            "path": "models/auto_mosaic/model.zip",
+            "size_bytes": len(archive_bytes),
+            "sha256": hashlib.sha256(archive_bytes).hexdigest(),
+            "extract": "pt",
+            "provides": [
+                "models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt"
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = pathlib.Path(temp_dir)
+
+            def fake_download(url, output, headers):
+                output.parent.mkdir(parents=True)
+                output.write_bytes(archive_bytes)
+
+            with mock.patch.object(
+                download_models, "run_urllib", side_effect=fake_download
+            ):
+                download_models.download(entry, root, False, 8, 8, "always")
+
+            extracted = root / entry["provides"][0]
+            self.assertEqual(extracted.read_bytes(), b"weights")
+            self.assertFalse((root / entry["path"]).exists())
+            sentinel = extracted.parent / ".model.zip.extracted"
+            self.assertTrue(sentinel.is_file())
+
+            with mock.patch.object(
+                download_models,
+                "run_urllib",
+                side_effect=AssertionError("verified extraction should be reused"),
+            ):
+                download_models.download(entry, root, False, 8, 8, "always")
+
+    def test_authenticated_download_errors_redact_the_secret(self):
+        entry = {
+            "name": "private model",
+            "url": "https://example.invalid/model.zip",
+            "path": "models/model.zip",
+            "required": True,
+            "requires_env": ["CIVITAI_API_TOKEN"],
+            "auth_query_env": "CIVITAI_API_TOKEN",
+        }
+        with tempfile.TemporaryDirectory() as temp_dir, mock.patch.dict(
+            os.environ, {"CIVITAI_API_TOKEN": "top secret"}
+        ), mock.patch.object(
+            download_models,
+            "run_urllib",
+            side_effect=RuntimeError("failed URL token=top+secret"),
+        ):
+            with self.assertRaises(RuntimeError) as raised:
+                download_models.download(
+                    entry, pathlib.Path(temp_dir), False, 8, 8, "once"
+                )
+
+        self.assertNotIn("top secret", str(raised.exception))
+        self.assertNotIn("top+secret", str(raised.exception))
+        self.assertIn("[REDACTED]", str(raised.exception))
+
     def test_parse_huggingface_resolve_url(self):
         parsed = download_models.parse_huggingface_url(
             "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/"

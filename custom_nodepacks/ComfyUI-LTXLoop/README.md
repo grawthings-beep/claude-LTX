@@ -10,6 +10,9 @@ Experimental seamless-loop nodes for LTX 2.3:
 - `LTX Loop Decode` gives the causal video VAE wrapped tail/head context and
   crops the central cycle.
 - `LTX Loop Audio Seam` smooths the audio boundary without changing duration.
+- `LTX Auto Mosaic JUST Segmentation (CPU)` applies a YOLO11 instance-
+  segmentation contour mosaic to completed frame batches. Its default targets
+  are `pussy`, `penis`, and `testicles`; `anus` is deliberately excluded.
 
 The sampler follows the latent-shift direction introduced by
 [Mobius](https://github.com/YisuiTT/Mobius). It is an LTX-specific experimental

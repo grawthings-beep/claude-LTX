@@ -8,8 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / "workflows"
 I2V_WORKFLOW = "mrxin-i2v.json"
 HQ_I2V_WORKFLOW = "mrxin-i2v-hq.json"
+AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-auto-mosaic.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
+AUTO_MOSAIC_WORKFLOW_SHA256 = "e14c2a4aa45176e431b563b9d4c2115b820b5bf86c91aa0243eecb5f2e45e9c4"
 
 
 def load_workflow(name=I2V_WORKFLOW):
@@ -46,15 +48,52 @@ def assert_subgraph_complete(testcase, subgraph):
             )
 
 
+def assert_layout_is_packed(testcase, graph):
+    def rectangle(values):
+        x, y, width, height = map(float, values)
+        return x, y, x + width, y + height
+
+    def overlaps(left, right):
+        return (
+            min(left[2], right[2]) > max(left[0], right[0])
+            and min(left[3], right[3]) > max(left[1], right[1])
+        )
+
+    def contains(outer, inner):
+        return (
+            outer[0] <= inner[0]
+            and outer[1] <= inner[1]
+            and outer[2] >= inner[2]
+            and outer[3] >= inner[3]
+        )
+
+    groups = [rectangle(group["bounding"]) for group in graph["groups"]]
+    for index, left in enumerate(groups):
+        for right in groups[index + 1 :]:
+            testcase.assertFalse(overlaps(left, right))
+
+    node_rectangles = []
+    for node in graph["nodes"]:
+        node_rect = rectangle([*node["pos"], *node.get("size", [220, 80])[:2]])
+        testcase.assertEqual(sum(contains(group, node_rect) for group in groups), 1)
+        node_rectangles.append((node["id"], node_rect))
+    for index, (left_id, left) in enumerate(node_rectangles):
+        for right_id, right in node_rectangles[index + 1 :]:
+            testcase.assertFalse(overlaps(left, right), (left_id, right_id))
+
+
 class WorkflowTests(unittest.TestCase):
-    def test_standard_and_hq_mrxin_i2v_workflows_are_bundled(self):
+    def test_standard_hq_and_auto_mosaic_workflows_are_bundled(self):
         names = {path.name for path in WORKFLOWS.glob("*.json")}
-        self.assertEqual(names, {I2V_WORKFLOW, HQ_I2V_WORKFLOW})
+        self.assertEqual(
+            names, {I2V_WORKFLOW, HQ_I2V_WORKFLOW, AUTO_MOSAIC_WORKFLOW}
+        )
 
     def test_noise_safe_workflow_is_locked(self):
         expected_hashes = {
             I2V_WORKFLOW: WORKFLOW_SHA256,
             HQ_I2V_WORKFLOW: HQ_WORKFLOW_SHA256,
+            AUTO_MOSAIC_WORKFLOW: AUTO_MOSAIC_WORKFLOW_SHA256,
         }
         for name, expected_hash in expected_hashes.items():
             with self.subTest(workflow=name):
@@ -180,6 +219,109 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(len(subgraph["nodes"]), 46)
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, subgraph)
+
+    def test_auto_mosaic_is_separate_and_runs_once_before_mp4_encode(self):
+        for name in (I2V_WORKFLOW, HQ_I2V_WORKFLOW):
+            self.assertNotIn(
+                "WanAutoMosaicVideo",
+                {node["type"] for node in load_workflow(name)["nodes"]},
+            )
+
+        workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)
+        nodes = {node["id"]: node for node in workflow["nodes"]}
+        links = {link[0]: link for link in workflow["links"]}
+        mosaics = [
+            node for node in workflow["nodes"] if node["type"] == "WanAutoMosaicVideo"
+        ]
+        self.assertEqual(len(mosaics), 1)
+        mosaic = mosaics[0]
+        self.assertEqual(
+            mosaic["widgets_values"],
+            [
+                "ntd11_anime_nsfw_segm_v5.pt",
+                "JUST",
+                0.3,
+                0.5,
+                0,
+                3,
+                "pussy,penis,testicles",
+            ],
+        )
+
+        incoming = links[mosaic["inputs"][0]["link"]]
+        generator = nodes[incoming[1]]
+        self.assertIn(
+            generator["type"],
+            {subgraph["id"] for subgraph in workflow["definitions"]["subgraphs"]},
+        )
+        self.assertEqual(incoming[2], 2)
+
+        encoders = [
+            node
+            for node in workflow["nodes"]
+            if node["type"] == "VHS_VideoCombine" and node.get("mode", 0) == 0
+        ]
+        self.assertEqual(len(encoders), 1)
+        encoder = encoders[0]
+        outgoing = links[encoder["inputs"][0]["link"]]
+        self.assertEqual(outgoing[1:3], [mosaic["id"], 0])
+        self.assertTrue(encoder["widgets_values"]["save_output"])
+        self.assertEqual(
+            links[encoder["inputs"][1]["link"]][1:3], [generator["id"], 3]
+        )
+
+    def test_auto_mosaic_uses_only_the_hq_first_pass_without_upscale(self):
+        workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)
+        nodes = {node["id"]: node for node in workflow["nodes"]}
+        hq_nodes = {node["id"]: node for node in load_workflow(HQ_I2V_WORKFLOW)["nodes"]}
+        subgraph = workflow["definitions"]["subgraphs"][0]
+        subnodes = {node["id"]: node for node in subgraph["nodes"]}
+        types = {node["type"] for node in workflow["nodes"] + subgraph["nodes"]}
+
+        self.assertEqual(nodes[19]["properties"]["value"], 1792)
+        self.assertEqual(nodes[181]["properties"]["value"], 2368)
+        self.assertEqual(nodes[6]["widgets_values"], hq_nodes[6]["widgets_values"])
+        self.assertEqual(subnodes[177]["widgets_values"], ["scale by multiplier", 0.5, "area"])
+        self.assertEqual(
+            workflow["extra"]["runpod_bundle"]["first_pass_resolution"],
+            [896, 1184],
+        )
+        self.assertFalse(workflow["extra"]["runpod_bundle"]["latent_upscale"])
+        self.assertNotIn("LatentUpscaleModelLoader", types)
+        self.assertNotIn("LTXVLatentUpsampler", types)
+        self.assertNotIn("ImageUpscaleWithModel", types)
+        self.assertNotIn("UpscaleModelLoader", types)
+        self.assertNotIn("RIFE VFI", types)
+        self.assertEqual(
+            [node["id"] for node in subgraph["nodes"] if node["type"] == "SamplerCustomAdvanced"],
+            [51],
+        )
+        self.assertEqual(
+            [output["label"] for output in subgraph["outputs"]],
+            ["Resized Image", "FPS", "Video First Pass", "Audio First Pass"],
+        )
+        first_pass_output = next(
+            link
+            for link in subgraph["links"]
+            if link["target_id"] == -20 and link["target_slot"] == 2
+        )
+        self.assertEqual(subnodes[first_pass_output["origin_id"]]["type"], "VAEDecode")
+
+    def test_auto_mosaic_serialization_and_layout_are_complete(self):
+        workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)
+        subgraph = workflow["definitions"]["subgraphs"][0]
+        assert_root_graph_complete(self, workflow)
+        assert_subgraph_complete(self, subgraph)
+        assert_layout_is_packed(self, workflow)
+        assert_layout_is_packed(self, subgraph)
+
+    def test_auto_mosaic_workflow_is_deterministically_generated(self):
+        generator = (ROOT / "scripts" / "prepare_workflows.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("_auto_mosaic_node", generator)
+        self.assertIn("_prune_subgraph_to_first_pass", generator)
+        self.assertIn("--check", generator)
 
     def test_i2v_conditioning_and_decode_defaults_reduce_artifacts(self):
         subgraph = load_workflow()["definitions"]["subgraphs"][0]

@@ -2,10 +2,11 @@
 
 RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
-Two workflows are bundled:
+Three workflows are bundled:
 
 - `mrxin-i2v.json`
 - `mrxin-i2v-hq.json`
+- `mrxin-i2v-auto-mosaic.json`
 
 `mrxin-i2v.json` keeps the graph from Civitai model version `2835183`
 (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
@@ -21,6 +22,11 @@ one at a time.
 first pass at 896x1184 and uses the latent x2 stage for a 1792x2368 final video.
 Its I2V image path bypasses the original 1536-pixel longer-edge reduction so
 the final pass receives the full-resolution conditioning image.
+`mrxin-i2v-auto-mosaic.json` keeps only that workflow's 896x1184 first pass;
+it does not run the latent x2 stage. After VAE decode, a CPU-only YOLO11
+instance-segmentation node applies the JUST contour mosaic once, immediately
+before MP4 encoding. The input image is never mosaicked. Default targets are
+`pussy`, `penis`, and `testicles`; `anus` is excluded.
 The standalone audio VAE is stored under `models/checkpoints`, which is the
 directory read by ComfyUI's `LTXVAudioVAELoader`.
 
@@ -44,9 +50,10 @@ startup it repairs missing NVIDIA UVM device nodes when the container permits
 it, removes the retired bundled `i2v.json`, `original.json`, and `loop.json`
 files, installs the bundled workflows, then performs a low-level CUDA driver
 probe.
-ComfyUI starts immediately
-while model downloads continue in the background. The `cuda12.8` tag remains
-as a compatibility alias for existing templates.
+The required 18 MB auto-mosaic segmentation archive is downloaded, size- and
+SHA256-verified, and extracted before ComfyUI starts. All larger model downloads
+continue in the background. The `cuda12.8` tag remains as a compatibility alias
+for existing templates.
 
 ## Model Storage
 
@@ -61,6 +68,11 @@ whose content hash matches the manifest are not read in full a second time.
 The requested Civitai LoRA (`fileId=2736052`) is the first manifest entry and is
 downloaded when `CIVITAI_TOKEN` is set. Its Hugging Face backup and all existing
 LoRA entries remain in the manifest.
+
+Set `CIVITAI_API_TOKEN` as a RunPod Secret. It authenticates only the required
+Anime NSFW Detection v5.0 archive request and is never stored in the repository,
+logs, or image. A Pod without the extracted model and this Secret stops before
+ComfyUI starts, instead of loading a broken auto-mosaic workflow.
 
 Useful logs:
 

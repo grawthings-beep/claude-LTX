@@ -110,6 +110,10 @@ install_bundled_nodepacks() {
     echo "Installing bundled custom node $(basename "${source}")"
     mkdir -p "${target}"
     cp -a "${source}/." "${target}/"
+    if [[ -f "${target}/requirements.txt" ]]; then
+      echo "Installing Python requirements for bundled node $(basename "${source}")"
+      "${PYTHON_BIN}" -m pip install -r "${target}/requirements.txt"
+    fi
   done
 }
 

@@ -30,9 +30,11 @@ RUN find /opt/comfyui-baked/custom_nodes -mindepth 1 -maxdepth 1 \
         -exec rm -rf {} + \
     && chmod +x /opt/claude-ltx/scripts/*.sh \
     && /opt/claude-ltx/scripts/install_custom_nodes.sh \
+    && python3 -c "import ultralytics; assert ultralytics.__version__ == '8.4.104'" \
     && python3 /opt/claude-ltx/scripts/check_workflow_nodes.py \
         --comfyui-dir /opt/comfyui-baked \
-        --workflows /opt/claude-ltx/workflows
+        --workflows /opt/claude-ltx/workflows \
+    && /opt/claude-ltx/scripts/container_smoke.sh
 
 EXPOSE 8188
 

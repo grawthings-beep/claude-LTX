@@ -16,6 +16,28 @@
       "sha256": "3aaf3a7b3384637694277fa9a211b0d4956da7f5512509dc420282ca033c8a6e"
     },
     {
+      "name": "Anime NSFW Detection v5.0 YOLO11 Segmentation",
+      "enabled": true,
+      "priority": -90,
+      "required": true,
+      "group": "auto-mosaic",
+      "url": "https://civitai.com/api/download/models/2266294",
+      "path": "models/auto_mosaic/animeNSFWDetection_v50.zip",
+      "size_bytes": 18846815,
+      "sha256": "aca92864d30384b8dd7851b32e7ade621a147730bf9710fb4417214e0c61d690",
+      "extract": "pt",
+      "provides": [
+        "models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt"
+      ],
+      "requires_env": [
+        "CIVITAI_API_TOKEN"
+      ],
+      "auth_query_env": "CIVITAI_API_TOKEN",
+      "headers": {
+        "Authorization": "Bearer ${CIVITAI_API_TOKEN}"
+      }
+    },
+    {
       "name": "10Eros beta checkpoint",
       "enabled": true,
       "priority": 0,
