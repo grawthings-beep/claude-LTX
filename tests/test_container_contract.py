@@ -60,8 +60,42 @@ class ContainerContractTests(unittest.TestCase):
         self.assertIn("/opt/claude-ltx/scripts/start.sh", smoke)
         self.assertIn("--quick-test-for-ci", smoke)
         self.assertIn("DOWNLOAD_MODELS=0", smoke)
+        self.assertIn("SKIP_CUDA_CHECK=1", smoke)
         self.assertIn("ntd11_anime_nsfw_segm_v5.pt", smoke)
         self.assertIn("container_smoke.sh", dockerfile)
+
+    def test_cuda_images_are_real_separate_builds(self):
+        dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+        workflow = (ROOT / ".github" / "workflows" / "build-ghcr.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            "runpod/comfyui:1.4.4-cuda12.8@sha256:7078f94dbe28",
+            dockerfile,
+        )
+        self.assertIn(
+            "runpod/comfyui:1.4.4-cuda12.8@sha256:7078f94dbe28",
+            workflow,
+        )
+        self.assertIn(
+            "runpod/comfyui:1.4.4-cuda13.0@sha256:949b0688db06",
+            workflow,
+        )
+        self.assertIn("BASE_IMAGE=${{ matrix.base_image }}", workflow)
+        self.assertIn('echo "${IMAGE}:${GITHUB_SHA}"', workflow)
+        self.assertIn('echo "${IMAGE}:${GITHUB_SHA}-${CUDA_VARIANT}"', workflow)
+
+    def test_startup_checks_pytorch_cuda_before_model_downloads(self):
+        start = (ROOT / "scripts" / "start.sh").read_text(encoding="utf-8")
+
+        self.assertIn("torch.cuda.init()", start)
+        self.assertIn("torch.version.cuda", start)
+        self.assertIn("cuda12.8 image on R570 hosts", start)
+        self.assertLess(
+            start.index("\nprepare_cuda\n"),
+            start.index("\nensure_auto_mosaic_model\n"),
+        )
 
     def test_ci_validates_generated_workflow_and_mosaic_node(self):
         workflow = (ROOT / ".github" / "workflows" / "build-ghcr.yml").read_text(

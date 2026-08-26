@@ -1,9 +1,11 @@
-ARG BASE_IMAGE=runpod/comfyui:1.4.4-cuda13.0@sha256:949b0688db0692b97b9aab9efd1c8f5afe94cfaa32c32008f31bcafcff63baf1
+ARG BASE_IMAGE=runpod/comfyui:1.4.4-cuda12.8@sha256:7078f94dbe28d079c487c245dc3524443e2c6225a6208a1fff8c7a652c1b3a40
 FROM ${BASE_IMAGE}
 
 ARG BUILD_REVISION=unknown
+ARG CUDA_VARIANT=12.8
 
-LABEL org.opencontainers.image.revision="${BUILD_REVISION}"
+LABEL org.opencontainers.image.revision="${BUILD_REVISION}" \
+      io.runpod.cuda.variant="${CUDA_VARIANT}"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -12,7 +14,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HF_XET_HIGH_PERFORMANCE=1 \
     HF_HUB_DOWNLOAD_TIMEOUT=120 \
     CUDA_FORCE_PRELOAD_LIBRARIES=0 \
-    CLAUDE_LTX_REVISION="${BUILD_REVISION}"
+    CLAUDE_LTX_REVISION="${BUILD_REVISION}" \
+    CLAUDE_LTX_CUDA_VARIANT="${CUDA_VARIANT}"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

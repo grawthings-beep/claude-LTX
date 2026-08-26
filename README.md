@@ -38,27 +38,31 @@ directory read by ComfyUI's `LTXVAudioVAELoader`.
 ## RunPod Image
 
 ```text
-ghcr.io/grawthings-beep/claude-ltx:cuda13.0
+ghcr.io/grawthings-beep/claude-ltx:cuda12.8
 ```
 
-Each build also publishes an immutable image tag using the full Git commit SHA.
-Use that tag for RunPod deployments when a worker may have cached a mutable tag.
+CUDA 12.8 is the default and supports RTX 5090/B200 hosts running the common
+R570 driver. `latest`, `cuda12.8`, the full Git commit SHA, and
+`<SHA>-cuda12.8` all refer to the actual CUDA 12.8 build. CUDA 13.0 is published
+separately as `cuda13.0` and `<SHA>-cuda13.0`; it requires an R580 or newer host
+driver. Never use the CUDA 13.0 image on a host that reports CUDA 12.8.
+Use an immutable SHA tag for RunPod deployments when a worker may have cached a
+mutable tag.
 The startup log prints `claude-LTX image revision` so the running image can be
 matched to the requested tag.
 
 Expose HTTP port `8188`, mount the persistent volume at `/workspace`, and use
 the env vars from `runpod-template.env.example`.
 
-The image uses a pinned CUDA 13.0 RunPod base with PyTorch cu130 for RTX 5090
-support and bundles the external node packs required by the workflow. At
-startup it repairs missing NVIDIA UVM device nodes when the container permits
-it, removes the retired bundled `i2v.json`, `original.json`, and `loop.json`
-files, installs the bundled workflows, then performs a low-level CUDA driver
-probe.
+Both images use pinned RunPod bases and bundle the external node packs required
+by the workflow. At startup the container repairs missing NVIDIA UVM device
+nodes when permitted, then verifies both the low-level CUDA driver and the
+actual PyTorch CUDA runtime before downloading models. An incompatible host
+therefore stops immediately with a clear CUDA 12.8/R570 or CUDA 13.0/R580
+message.
 The required 18 MB auto-mosaic segmentation archive is downloaded, size- and
 SHA256-verified, and extracted before ComfyUI starts. All larger model downloads
-continue in the background. The `cuda12.8` tag remains as a compatibility alias
-for existing templates.
+continue in the background.
 
 ## Model Storage
 

@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,6 +24,25 @@ jobs:
           python3 -m pip install --disable-pip-version-check numpy==2.2.6
           python3 -m unittest discover -s tests -v
 
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cuda: cuda12.8
+            cuda_variant: "12.8"
+            primary: true
+            base_image: runpod/comfyui:1.4.4-cuda12.8@sha256:7078f94dbe28d079c487c245dc3524443e2c6225a6208a1fff8c7a652c1b3a40
+          - cuda: cuda13.0
+            cuda_variant: "13.0"
+            primary: false
+            base_image: runpod/comfyui:1.4.4-cuda13.0@sha256:949b0688db0692b97b9aab9efd1c8f5afe94cfaa32c32008f31bcafcff63baf1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -34,18 +53,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare image tags
+        id: image
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/claude-ltx
+          CUDA_VARIANT: ${{ matrix.cuda }}
+          PRIMARY: ${{ matrix.primary }}
+        run: |
+          {
+            echo 'tags<<EOF'
+            echo "${IMAGE}:${CUDA_VARIANT}"
+            echo "${IMAGE}:${GITHUB_SHA}-${CUDA_VARIANT}"
+            if [[ "${PRIMARY}" == "true" ]]; then
+              echo "${IMAGE}:latest"
+              echo "${IMAGE}:${GITHUB_SHA}"
+            fi
+            echo 'EOF'
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/claude-ltx:latest
-            ghcr.io/${{ github.repository_owner }}/claude-ltx:cuda13.0
-            ghcr.io/${{ github.repository_owner }}/claude-ltx:cuda12.8
-            ghcr.io/${{ github.repository_owner }}/claude-ltx:${{ github.sha }}
+          tags: ${{ steps.image.outputs.tags }}
           build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}
             BUILD_REVISION=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            CUDA_VARIANT=${{ matrix.cuda_variant }}
+          cache-from: type=gha,scope=${{ matrix.cuda }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cuda }}
           provenance: false

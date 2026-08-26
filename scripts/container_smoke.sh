@@ -31,6 +31,7 @@ printf 'container-smoke-placeholder\n' > \
 env \
   DOWNLOAD_MODELS=0 \
   RUN_DEP_CHECK=0 \
+  SKIP_CUDA_CHECK=1 \
   WORKSPACE_DIR="${SMOKE_ROOT}/workspace" \
   MODEL_ROOT="${SMOKE_ROOT}/workspace" \
   CONFIG_DIR="${SMOKE_ROOT}/config" \
@@ -39,4 +40,4 @@ env \
   /opt/claude-ltx/scripts/start.sh
 
 test -d "${SMOKE_ROOT}/workspace/user/default/workflows"
-test "$(find "${SMOKE_ROOT}/workspace/user/default/workflows" -maxdepth 1 -name '*.json' | wc -l)" -ge 3
+test "$(find "${SMOKE_ROOT}/workspace/user/default/workflows" -maxdepth 1 -name '*.json' | wc -l)" -ge 4

@@ -505,19 +505,20 @@ class WorkflowTests(unittest.TestCase):
             ROOT / ".github" / "workflows" / "build-ghcr.yml"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("runpod/comfyui:1.4.4-cuda13.0@sha256:", dockerfile)
+        self.assertIn("runpod/comfyui:1.4.4-cuda12.8@sha256:", dockerfile)
         self.assertIn("CUDA_FORCE_PRELOAD_LIBRARIES=0", dockerfile)
         self.assertIn("nvidia-modprobe", dockerfile)
         self.assertIn("repair_nvidia_devices", start)
         self.assertIn("cuInit", start)
         self.assertIn("claude-LTX image revision", start)
+        self.assertIn("claude-LTX CUDA variant", start)
         self.assertIn("i2v.json original.json loop.json", start)
         self.assertIn("CLAUDE_LTX_REVISION", dockerfile)
         self.assertNotIn("wait_for_gpu", start)
         self.assertNotIn("GPU_WAIT_TIMEOUT", start)
-        self.assertIn("claude-ltx:cuda13.0", build)
-        self.assertIn("claude-ltx:cuda12.8", build)
-        self.assertIn("claude-ltx:${{ github.sha }}", build)
+        self.assertIn("cuda: cuda13.0", build)
+        self.assertIn("cuda: cuda12.8", build)
+        self.assertIn('echo "${IMAGE}:${GITHUB_SHA}"', build)
         self.assertIn("BUILD_REVISION=${{ github.sha }}", build)
         self.assertLess(
             start.index("start_background_downloads"),

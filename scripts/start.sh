@@ -32,6 +32,7 @@ export YOLO_AUTOINSTALL="${YOLO_AUTOINSTALL:-false}"
 export YOLO_OFFLINE="${YOLO_OFFLINE:-true}"
 
 echo "claude-LTX image revision: ${CLAUDE_LTX_REVISION:-unknown}"
+echo "claude-LTX CUDA variant: ${CLAUDE_LTX_CUDA_VARIANT:-unknown}"
 
 mkdir -p "${WORKSPACE_DIR}/input" \
          "${WORKSPACE_DIR}/output" \
@@ -107,26 +108,53 @@ raise SystemExit(result != 0)
 PY
 }
 
+probe_torch_cuda() {
+  "${PYTHON_BIN}" - <<'PY'
+import sys
+
+import torch
+
+print(f"PyTorch CUDA runtime: torch={torch.__version__} cuda={torch.version.cuda}")
+try:
+    torch.cuda.init()
+    device = torch.cuda.current_device()
+    name = torch.cuda.get_device_name(device)
+except Exception as error:
+    print(f"PyTorch CUDA initialization failed: {error}", file=sys.stderr)
+    raise SystemExit(1)
+
+print(f"PyTorch CUDA probe: device={device} name={name}")
+PY
+}
+
 prepare_cuda() {
+  if [[ "${SKIP_CUDA_CHECK:-0}" == "1" ]]; then
+    echo "Skipping CUDA runtime probe."
+    return 0
+  fi
+
   command -v nvidia-smi >/dev/null 2>&1 || return 0
 
   repair_nvidia_devices
-  if probe_cuda_driver; then
-    return 0
+  if ! probe_cuda_driver; then
+    echo "WARN: CUDA initialization failed; retrying device-node repair once." >&2
+    repair_nvidia_devices
+    sleep 1
+    if ! probe_cuda_driver; then
+      echo "ERROR: NVIDIA is visible to nvidia-smi, but the CUDA driver cannot initialize." >&2
+      echo "ERROR: This indicates a RunPod host driver/runtime allocation problem." >&2
+      nvidia-smi || true
+      ls -la /dev/nvidia* 2>/dev/null || true
+      return 1
+    fi
   fi
 
-  echo "WARN: CUDA initialization failed; retrying device-node repair once." >&2
-  repair_nvidia_devices
-  sleep 1
-  if probe_cuda_driver; then
-    return 0
+  if ! probe_torch_cuda; then
+    echo "ERROR: The image CUDA runtime is incompatible with this RunPod host driver." >&2
+    echo "ERROR: Use the cuda12.8 image on R570 hosts; cuda13.0 requires R580 or newer." >&2
+    nvidia-smi || true
+    return 1
   fi
-
-  echo "ERROR: NVIDIA is visible to nvidia-smi, but the CUDA driver cannot initialize." >&2
-  echo "ERROR: This indicates a RunPod host driver/runtime allocation problem." >&2
-  nvidia-smi || true
-  ls -la /dev/nvidia* 2>/dev/null || true
-  return 0
 }
 
 prepare_cuda
