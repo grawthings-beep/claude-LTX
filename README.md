@@ -29,13 +29,16 @@ it does not run the latent x2 stage. After VAE decode, a CPU-only YOLO11
 instance-segmentation node applies the JUST contour mosaic once, immediately
 before MP4 encoding. The input image is never mosaicked. Default targets are
 `pussy`, `penis`, and `testicles`; `anus` is excluded.
-`mrxin-i2v-2stage-auto-mosaic.json` preserves both HQ generation stages and
-the latent x2 step. It applies the same CPU JUST contour mosaic once after the
-second-pass VAE decode and immediately before the final MP4 encoder. The
-first-pass preview path and input image are unchanged.
+`mrxin-i2v-2stage-auto-mosaic.json` preserves both generation stages with a
+512x704 first pass and latent x2 step producing 1024x1408. It applies the same
+CPU JUST contour mosaic once after the second-pass VAE decode and immediately
+before the final MP4 encoder. The
+first-pass preview path and input-image conditioning are preserved.
 `mrxin-i2v-nmkd-auto-mosaic.json` replaces the expensive second LTX sampling
-stage with frame upscaling: 896x1184 first pass, VAE decode, NMKD-Siax 4x,
-nearest-exact 0.5x resize, CPU JUST mosaic, then 1792x2368 MP4 output.
+stage with frame upscaling: 512x704 first pass, VAE decode, NMKD-Siax 4x,
+nearest-exact 0.5x resize, CPU JUST mosaic, then 1024x1408 MP4 output.
+Both upscale mosaic versions show the final 1024x1408 size in the width and
+height controls; the first pass uses half of each dimension.
 The first-pass model, LoRAs, sampling, frame count, FPS and audio are preserved.
 There is no Final Pass or RIFE in this version. Detail reconstruction differs
 from the latent two-stage version; speed and visual quality need GPU comparison.

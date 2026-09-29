@@ -14,7 +14,7 @@ NMKD_AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-nmkd-auto-mosaic.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
 AUTO_MOSAIC_WORKFLOW_SHA256 = "2aa465caa8f330225a36cb39360d31fce9e5f79a71eb323125b9ef5fb0f161bf"
-TWO_STAGE_AUTO_MOSAIC_WORKFLOW_SHA256 = "d31713e55752c9b385c4abd99a88ffc546f1bb035831ebdc96abb214beda599c"
+TWO_STAGE_AUTO_MOSAIC_WORKFLOW_SHA256 = "069958e605ba772bc8007adcc8f1b73ec60de4e22bb57680fa6356791316c326"
 
 
 def load_workflow(name=I2V_WORKFLOW):
@@ -331,7 +331,27 @@ class WorkflowTests(unittest.TestCase):
         )
         self.assertEqual(subnodes[first_pass_output["origin_id"]]["type"], "VAEDecode")
 
-    def test_two_stage_auto_mosaic_preserves_hq_and_wraps_final_encoder(self):
+    def test_upscale_presets_generate_512x704_and_output_1024x1408(self):
+        for name in (TWO_STAGE_AUTO_MOSAIC_WORKFLOW, NMKD_AUTO_MOSAIC_WORKFLOW):
+            with self.subTest(workflow=name):
+                workflow = load_workflow(name)
+                nodes = {node["id"]: node for node in workflow["nodes"]}
+                for node_id, value in ((19, 1024), (181, 1408)):
+                    self.assertEqual(nodes[node_id]["properties"]["value"], value)
+                    self.assertEqual(nodes[node_id]["widgets_values"][:2], [value, value])
+                    self.assertEqual((value // 2) % 32, 0)
+                for subgraph in workflow["definitions"]["subgraphs"]:
+                    subnodes = {node["id"]: node for node in subgraph["nodes"]}
+                    self.assertEqual(subnodes[178]["widgets_values"][:2], [1024, 1408])
+                    self.assertEqual(
+                        subnodes[177]["widgets_values"],
+                        ["scale by multiplier", 0.5, "area"],
+                    )
+                bundle = workflow["extra"]["runpod_bundle"]
+                self.assertEqual(bundle["first_pass_resolution"], [512, 704])
+                self.assertEqual(bundle["final_resolution"], [1024, 1408])
+
+    def test_two_stage_auto_mosaic_preserves_sampling_and_wraps_final_encoder(self):
         workflow = load_workflow(TWO_STAGE_AUTO_MOSAIC_WORKFLOW)
         hq = load_workflow(HQ_I2V_WORKFLOW)
         nodes = {node["id"]: node for node in workflow["nodes"]}
@@ -348,6 +368,9 @@ class WorkflowTests(unittest.TestCase):
             if node["type"] == "WanAutoMosaicVideo"
         ]
 
+        for subgraph in hq["definitions"]["subgraphs"]:
+            resize = next(node for node in subgraph["nodes"] if node["id"] == 178)
+            resize["widgets_values"][:2] = [1024, 1408]
         self.assertEqual(workflow["definitions"], hq["definitions"])
         self.assertEqual(len(mosaics), 1)
         mosaic = mosaics[0]
@@ -383,7 +406,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(final_encoder["widgets_values"]["save_output"])
         self.assertEqual(
             workflow["extra"]["runpod_bundle"]["final_resolution"],
-            [1792, 2368],
+            [1024, 1408],
         )
         self.assertTrue(workflow["extra"]["runpod_bundle"]["latent_upscale"])
 
@@ -423,6 +446,8 @@ class WorkflowTests(unittest.TestCase):
         original = load_workflow(AUTO_MOSAIC_WORKFLOW)
         subgraph = workflow["definitions"]["subgraphs"][0]
         original_subgraph = original["definitions"]["subgraphs"][0]
+        original_resize = next(node for node in original_subgraph["nodes"] if node["id"] == 178)
+        original_resize["widgets_values"][:2] = [1024, 1408]
         self.assertNotEqual(workflow["id"], original["id"])
         self.assertNotEqual(subgraph["id"], original_subgraph["id"])
         self.assertEqual(
@@ -440,11 +465,11 @@ class WorkflowTests(unittest.TestCase):
         before = {node["id"]: node for node in original["nodes"]}
         after = {node["id"]: node for node in workflow["nodes"]}
         for node_id, old_node in before.items():
-            if old_node["type"] != "VHS_VideoCombine":
+            if old_node["type"] != "VHS_VideoCombine" and node_id not in (19, 181):
                 self.assertEqual(after[node_id].get("widgets_values"), old_node.get("widgets_values"))
         bundle = workflow["extra"]["runpod_bundle"]
-        self.assertEqual(bundle["first_pass_resolution"], [896, 1184])
-        self.assertEqual(bundle["final_resolution"], [1792, 2368])
+        self.assertEqual(bundle["first_pass_resolution"], [512, 704])
+        self.assertEqual(bundle["final_resolution"], [1024, 1408])
         self.assertFalse(bundle["latent_upscale"])
         self.assertEqual(bundle["image_upscale"], 2)
 

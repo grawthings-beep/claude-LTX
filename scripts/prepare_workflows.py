@@ -503,6 +503,21 @@ def patch_auto_mosaic(source):
     return graph
 
 
+def _set_upscale_resolution(graph):
+    first_pass = [512, 704]
+    final = [value * 2 for value in first_pass]
+    nodes = {node["id"]: node for node in graph["nodes"]}
+    for node_id, value in zip((19, 181), final):
+        nodes[node_id]["properties"]["value"] = value
+        nodes[node_id]["widgets_values"][:2] = [value, value]
+    for subgraph in graph["definitions"]["subgraphs"]:
+        resize = next(node for node in subgraph["nodes"] if node["id"] == 178)
+        resize["widgets_values"][:2] = final
+    graph["extra"]["runpod_bundle"].update(
+        first_pass_resolution=first_pass, final_resolution=final
+    )
+
+
 def patch_two_stage_auto_mosaic(source):
     graph = copy.deepcopy(source)
     graph["id"] = TWO_STAGE_AUTO_WORKFLOW_ID
@@ -606,10 +621,9 @@ def patch_two_stage_auto_mosaic(source):
             "models/auto_mosaic/ntd11_anime_nsfw_segm_v5.pt",
             "CIVITAI_API_TOKEN",
         ],
-        "first_pass_resolution": [896, 1184],
-        "final_resolution": [1792, 2368],
         "latent_upscale": True,
     }
+    _set_upscale_resolution(graph)
     _rebuild_root_endpoints(graph)
     return graph
 
@@ -686,13 +700,13 @@ def patch_nmkd_auto_mosaic(source):
         {
             "preset": "mrxin-i2v-nmkd-auto-mosaic",
             "postprocess": "NMKD-Siax frame upscale (4x then 0.5x), CPU JUST mosaic, MP4 encode",
-            "final_resolution": [1792, 2368],
             "image_upscale": 2,
         }
     )
     graph["extra"]["runpod_bundle"]["requires"].append(
         "models/upscale_models/4x_NMKD-Siax_200k.pth"
     )
+    _set_upscale_resolution(graph)
     _rebuild_root_endpoints(graph)
     return graph
 
