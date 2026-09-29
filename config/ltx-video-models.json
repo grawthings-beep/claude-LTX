@@ -123,6 +123,17 @@
       "sha256": "f0773b4e3e57318e6aa4dd4a35e1d16213a5f160fbc0376163f06888bbcbe246"
     },
     {
+      "name": "4x NMKD Siax 200k upscaler",
+      "enabled": true,
+      "required": true,
+      "priority": 0,
+      "group": "upscale-nmkd",
+      "url": "https://huggingface.co/uwg/upscaler/resolve/f6bace545e358eab5491f8f39b90a2dd42e8cc77/ESRGAN/4x_NMKD-Siax_200k.pth",
+      "path": "models/upscale_models/4x_NMKD-Siax_200k.pth",
+      "size_bytes": 66957746,
+      "sha256": "560424d9f68625713fc47e9e7289a98aabe1d744e1cd6a9ae5a35e9957fd127e"
+    },
+    {
       "name": "nmkd Siax CX 200k upscaler",
       "enabled": true,
       "priority": 0,

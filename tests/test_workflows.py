@@ -10,6 +10,7 @@ I2V_WORKFLOW = "mrxin-i2v.json"
 HQ_I2V_WORKFLOW = "mrxin-i2v-hq.json"
 AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-auto-mosaic.json"
 TWO_STAGE_AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-2stage-auto-mosaic.json"
+NMKD_AUTO_MOSAIC_WORKFLOW = "mrxin-i2v-nmkd-auto-mosaic.json"
 WORKFLOW_SHA256 = "635dfdb69b47eb9993313db2b1c4a4fdc0930b3b92bfce3b901c03352d4dc8f9"
 HQ_WORKFLOW_SHA256 = "ef68769495a1acc50f0d9bd5d4bbbc354ca04affa4f19dc32027f3caf7f0e5be"
 AUTO_MOSAIC_WORKFLOW_SHA256 = "2aa465caa8f330225a36cb39360d31fce9e5f79a71eb323125b9ef5fb0f161bf"
@@ -107,6 +108,7 @@ class WorkflowTests(unittest.TestCase):
                 HQ_I2V_WORKFLOW,
                 AUTO_MOSAIC_WORKFLOW,
                 TWO_STAGE_AUTO_MOSAIC_WORKFLOW,
+                NMKD_AUTO_MOSAIC_WORKFLOW,
             },
         )
 
@@ -415,6 +417,92 @@ class WorkflowTests(unittest.TestCase):
         )
         assert_root_graph_complete(self, workflow)
         assert_subgraph_complete(self, workflow["definitions"]["subgraphs"][0])
+
+    def test_nmkd_has_only_first_pass_and_preserves_generation_settings(self):
+        workflow = load_workflow(NMKD_AUTO_MOSAIC_WORKFLOW)
+        original = load_workflow(AUTO_MOSAIC_WORKFLOW)
+        subgraph = workflow["definitions"]["subgraphs"][0]
+        original_subgraph = original["definitions"]["subgraphs"][0]
+        self.assertNotEqual(workflow["id"], original["id"])
+        self.assertNotEqual(subgraph["id"], original_subgraph["id"])
+        self.assertEqual(
+            {key: value for key, value in subgraph.items() if key != "id"},
+            {key: value for key, value in original_subgraph.items() if key != "id"},
+        )
+        types = {node["type"] for node in workflow["nodes"] + subgraph["nodes"]}
+        self.assertNotIn("LTXVLatentUpsampler", types)
+        self.assertNotIn("LatentUpscaleModelLoader", types)
+        self.assertNotIn("RIFEInterpolation", types)
+        self.assertEqual(
+            [node["id"] for node in subgraph["nodes"] if node["type"] == "SamplerCustomAdvanced"],
+            [51],
+        )
+        before = {node["id"]: node for node in original["nodes"]}
+        after = {node["id"]: node for node in workflow["nodes"]}
+        for node_id, old_node in before.items():
+            if old_node["type"] != "VHS_VideoCombine":
+                self.assertEqual(after[node_id].get("widgets_values"), old_node.get("widgets_values"))
+        bundle = workflow["extra"]["runpod_bundle"]
+        self.assertEqual(bundle["first_pass_resolution"], [896, 1184])
+        self.assertEqual(bundle["final_resolution"], [1792, 2368])
+        self.assertFalse(bundle["latent_upscale"])
+        self.assertEqual(bundle["image_upscale"], 2)
+
+    def test_nmkd_upscales_decoded_frames_then_mosaics_once_before_encode(self):
+        workflow = load_workflow(NMKD_AUTO_MOSAIC_WORKFLOW)
+        nodes = {node["id"]: node for node in workflow["nodes"]}
+        links = {link[0]: link for link in workflow["links"]}
+
+        def only_node(node_type):
+            matches = [node for node in nodes.values() if node["type"] == node_type]
+            self.assertEqual(len(matches), 1, node_type)
+            self.assertEqual(matches[0]["mode"], 0)
+            return matches[0]
+
+        def upstream(node, input_name):
+            socket = next(item for item in node["inputs"] if item["name"] == input_name)
+            link = links[socket["link"]]
+            return link[1:3]
+
+        loader = only_node("UpscaleModelLoader")
+        upscale = only_node("ImageUpscaleWithModel")
+        resize = only_node("ImageScaleBy")
+        mosaic = only_node("WanAutoMosaicVideo")
+        encoder = only_node("VHS_VideoCombine")
+        instance = only_node(workflow["definitions"]["subgraphs"][0]["id"])
+        self.assertEqual(loader["widgets_values"], ["4x_NMKD-Siax_200k.pth"])
+        self.assertEqual(resize["widgets_values"], ["nearest-exact", 0.5])
+        self.assertEqual(upstream(upscale, "upscale_model"), [loader["id"], 0])
+        self.assertEqual(upstream(upscale, "image"), [instance["id"], 2])
+        self.assertEqual(upstream(resize, "image"), [upscale["id"], 0])
+        self.assertEqual(upstream(mosaic, "images"), [resize["id"], 0])
+        self.assertEqual(upstream(encoder, "images"), [mosaic["id"], 0])
+        self.assertEqual(upstream(encoder, "audio"), [instance["id"], 3])
+        self.assertTrue(encoder["widgets_values"]["save_output"])
+        original_encoder = next(
+            node for node in load_workflow(AUTO_MOSAIC_WORKFLOW)["nodes"]
+            if node["type"] == "VHS_VideoCombine"
+        )
+        original_links = {link[0]: link for link in load_workflow(AUTO_MOSAIC_WORKFLOW)["links"]}
+        fps_input = next(item for item in original_encoder["inputs"] if item["name"] == "frame_rate")
+        self.assertEqual(upstream(encoder, "frame_rate"), original_links[fps_input["link"]][1:3])
+        self.assertEqual(mosaic["widgets_values"][1:], ["JUST", 0.3, 0.5, 0, 3, "pussy,penis,testicles"])
+
+    def test_nmkd_graph_layout_and_model_dependency_are_complete(self):
+        workflow = load_workflow(NMKD_AUTO_MOSAIC_WORKFLOW)
+        assert_root_graph_complete(self, workflow)
+        assert_layout_is_packed(self, workflow)
+        for subgraph in workflow["definitions"]["subgraphs"]:
+            assert_subgraph_complete(self, subgraph)
+            assert_layout_is_packed(self, subgraph)
+        models = json.loads((ROOT / "config/ltx-video-models.json").read_text(encoding="utf-8"))["models"]
+        loader = next(node for node in workflow["nodes"] if node["type"] == "UpscaleModelLoader")
+        model_path = "models/upscale_models/" + loader["widgets_values"][0]
+        entries = [entry for entry in models if entry["path"] == model_path]
+        self.assertEqual(len(entries), 1)
+        self.assertTrue(entries[0]["enabled"])
+        self.assertTrue(entries[0]["required"])
+        self.assertIn(model_path, workflow["extra"]["runpod_bundle"]["requires"])
 
     def test_auto_mosaic_serialization_and_layout_are_complete(self):
         workflow = load_workflow(AUTO_MOSAIC_WORKFLOW)

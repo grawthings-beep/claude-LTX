@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate first-pass and two-stage auto-mosaic workflows."""
+"""Generate first-pass, two-stage and NMKD auto-mosaic workflows."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "workflows" / "mrxin-i2v-hq.json"
 FIRST_PASS_OUTPUT = ROOT / "workflows" / "mrxin-i2v-auto-mosaic.json"
 TWO_STAGE_OUTPUT = ROOT / "workflows" / "mrxin-i2v-2stage-auto-mosaic.json"
+NMKD_OUTPUT = ROOT / "workflows" / "mrxin-i2v-nmkd-auto-mosaic.json"
 AUTO_WORKFLOW_ID = str(
     uuid.uuid5(uuid.NAMESPACE_URL, "claude-LTX/mrxin-i2v-auto-mosaic")
 )
@@ -619,6 +620,83 @@ def encode(graph):
     ).encode("utf-8")
 
 
+def patch_nmkd_auto_mosaic(source):
+    graph = patch_auto_mosaic(source)
+    graph["id"] = str(uuid.uuid5(uuid.NAMESPACE_URL, "claude-LTX/mrxin-i2v-nmkd-auto-mosaic"))
+    subgraph = graph["definitions"]["subgraphs"][0]
+    instance = next(node for node in graph["nodes"] if node["type"] == subgraph["id"])
+    subgraph["id"] = str(uuid.uuid5(uuid.UUID(graph["id"]), "first-pass"))
+    instance["type"] = subgraph["id"]
+
+    source_nodes = {node["id"]: node for node in source["nodes"]}
+    first_id = graph["last_node_id"] + 1
+    first_order = max(node.get("order", 0) for node in graph["nodes"]) + 1
+    loader, upscale, resize = [copy.deepcopy(source_nodes[node_id]) for node_id in (170, 171, 172)]
+    for offset, node in enumerate((loader, upscale, resize)):
+        node.update(id=first_id + offset, order=first_order + offset, mode=0)
+        node["pos"] = [0, offset * 300]
+        node["flags"] = {}
+    loader["title"] = "NMKD-Siax 4x Model"
+    loader["widgets_values"] = ["4x_NMKD-Siax_200k.pth"]
+    upscale["title"] = "NMKD-Siax Frame Upscale"
+    resize["title"] = "2x Output (4x Model / 2)"
+    resize["widgets_values"] = ["nearest-exact", 0.5]
+    graph["nodes"].extend((loader, upscale, resize))
+
+    mosaic = next(node for node in graph["nodes"] if node["type"] == "WanAutoMosaicVideo")
+    incoming = next(link for link in graph["links"] if link[3:5] == [mosaic["id"], 0])
+    if incoming[1:3] != [instance["id"], 2]:
+        raise ValueError("unexpected first-pass decoded frame output")
+    incoming[3:5] = [upscale["id"], 1]
+    first_link = graph["last_link_id"] + 1
+    graph["links"].extend(
+        [
+            [first_link, loader["id"], 0, upscale["id"], 0, "UPSCALE_MODEL"],
+            [first_link + 1, upscale["id"], 0, resize["id"], 0, "IMAGE"],
+            [first_link + 2, resize["id"], 0, mosaic["id"], 0, "IMAGE"],
+        ]
+    )
+    encoder = next(node for node in graph["nodes"] if node["type"] == "VHS_VideoCombine")
+    encoder["title"] = "NMKD 2x AUTO MOSAIC MP4"
+    encoder["widgets_values"]["filename_prefix"] = "MrXin/LTX2.3/AutoMosaic/NMKD2x"
+    mosaic["order"] = first_order + 3
+    encoder["order"] = first_order + 4
+
+    group_id = max(group["id"] for group in graph["groups"]) + 1
+    group_order = [group["id"] for group in graph["groups"]]
+    group_order.insert(group_order.index(14), group_id)
+    graph["groups"].append(
+        {
+            "id": group_id,
+            "title": "NMKD-Siax 2x",
+            "bounding": [0, 0, 500, 1000],
+            "color": "#3f789e",
+            "font_size": 24,
+            "flags": {},
+        }
+    )
+    _flatten_and_pack_groups(
+        graph,
+        group_order=group_order,
+        node_group_overrides={node["id"]: group_id for node in (loader, upscale, resize)},
+    )
+    graph["last_node_id"] = max(node["id"] for node in graph["nodes"])
+    graph["last_link_id"] = max(link[0] for link in graph["links"])
+    graph["extra"]["runpod_bundle"].update(
+        {
+            "preset": "mrxin-i2v-nmkd-auto-mosaic",
+            "postprocess": "NMKD-Siax frame upscale (4x then 0.5x), CPU JUST mosaic, MP4 encode",
+            "final_resolution": [1792, 2368],
+            "image_upscale": 2,
+        }
+    )
+    graph["extra"]["runpod_bundle"]["requires"].append(
+        "models/upscale_models/4x_NMKD-Siax_200k.pth"
+    )
+    _rebuild_root_endpoints(graph)
+    return graph
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -628,6 +706,7 @@ def main():
     outputs = {
         FIRST_PASS_OUTPUT: encode(patch_auto_mosaic(source)),
         TWO_STAGE_OUTPUT: encode(patch_two_stage_auto_mosaic(source)),
+        NMKD_OUTPUT: encode(patch_nmkd_auto_mosaic(source)),
     }
     if args.check:
         stale = [

@@ -4,6 +4,9 @@ Bundled workflows:
 
 - `mrxin-i2v.json`
 - `mrxin-i2v-hq.json`
+- `mrxin-i2v-auto-mosaic.json`: first pass with CPU mosaic, no upscale.
+- `mrxin-i2v-2stage-auto-mosaic.json`: both LTX stages with CPU mosaic.
+- `mrxin-i2v-nmkd-auto-mosaic.json`: first pass, NMKD-Siax 2x, CPU mosaic.
 
 This keeps the `MrXin LTX 2.3 I2V EROS V4` graph from Civitai model version
 `2835183` (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the 10Eros checkpoint and
@@ -23,6 +26,13 @@ audio path, and five-second duration. Its first pass is 896x1184 and the latent
 x2 pass produces 1792x2368. The source image is resized once to that final
 resolution and sent through `LTXVPreprocess` to both I2V stages without the
 original 1536-pixel longer-edge reduction.
+
+The NMKD version keeps the HQ first pass at 896x1184 but does not run a final
+LTX sampling pass. Decoded frames go through `4x_NMKD-Siax_200k.pth` and a
+nearest-exact 0.5x resize for a 1792x2368 result. Mosaic runs once after resizing,
+immediately before the only MP4 encoder. Audio and FPS stay on the first-pass
+path. The size controls specify the final output size; generation is half that
+width and height. Existing LoRA settings and input-image conditioning are kept.
 
 The manifest downloads every model selected by the workflow's default active
 path. The custom-node list pins every external node pack used by the graph.

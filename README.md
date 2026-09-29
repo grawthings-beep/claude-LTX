@@ -2,12 +2,13 @@
 
 RunPod ComfyUI template for the MrXin LTX 2.3 I2V EROS workflow.
 
-Four workflows are bundled:
+Five workflows are bundled:
 
 - `mrxin-i2v.json`
 - `mrxin-i2v-hq.json`
 - `mrxin-i2v-auto-mosaic.json`
 - `mrxin-i2v-2stage-auto-mosaic.json`
+- `mrxin-i2v-nmkd-auto-mosaic.json`
 
 `mrxin-i2v.json` keeps the graph from Civitai model version `2835183`
 (`mrxinLTX23I2VEros12GBVRAM_i2vV40.zip`). It includes the checkpoint/distilled
@@ -32,6 +33,14 @@ before MP4 encoding. The input image is never mosaicked. Default targets are
 the latent x2 step. It applies the same CPU JUST contour mosaic once after the
 second-pass VAE decode and immediately before the final MP4 encoder. The
 first-pass preview path and input image are unchanged.
+`mrxin-i2v-nmkd-auto-mosaic.json` replaces the expensive second LTX sampling
+stage with frame upscaling: 896x1184 first pass, VAE decode, NMKD-Siax 4x,
+nearest-exact 0.5x resize, CPU JUST mosaic, then 1792x2368 MP4 output.
+The first-pass model, LoRAs, sampling, frame count, FPS and audio are preserved.
+There is no Final Pass or RIFE in this version. Detail reconstruction differs
+from the latent two-stage version; speed and visual quality need GPU comparison.
+The pinned 67 MB `4x_NMKD-Siax_200k.pth` model downloads automatically with
+size and SHA256 verification. Existing workflows and their models remain available.
 The standalone audio VAE is stored under `models/checkpoints`, which is the
 directory read by ComfyUI's `LTXVAudioVAELoader`.
 

@@ -37,6 +37,23 @@ class ManifestTests(unittest.TestCase):
         }
         self.assertTrue(expected.issubset(paths), expected - paths)
 
+    def test_nmkd_frame_upscaler_is_pinned_and_downloaded_by_default(self):
+        entry = next(
+            item for item in load_models()
+            if item["path"] == "models/upscale_models/4x_NMKD-Siax_200k.pth"
+        )
+        self.assertTrue(entry["enabled"])
+        self.assertTrue(entry["required"])
+        self.assertEqual(entry["priority"], 0)
+        self.assertEqual(entry["group"], "upscale-nmkd")
+        self.assertEqual(entry["size_bytes"], 66957746)
+        self.assertEqual(
+            entry["sha256"],
+            "560424d9f68625713fc47e9e7289a98aabe1d744e1cd6a9ae5a35e9957fd127e",
+        )
+        self.assertIn("/resolve/f6bace545e358eab5491f8f39b90a2dd42e8cc77/", entry["url"])
+        self.assertNotIn("requires_env", entry)
+
     def test_blowjob_lora_is_the_first_download(self):
         models = load_models()
         entry = models[0]
